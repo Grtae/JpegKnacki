@@ -51,7 +51,6 @@
       height: 2px;
     }
     /* HUD & affichages */
-    /* Conteneur regroupant Health, Kills et Knacki */
     #hudTop {
       position: absolute;
       top: 10px;
@@ -59,7 +58,7 @@
       z-index: 100;
       display: flex;
       align-items: center;
-      gap: 40px; /* Espace entre les éléments */
+      gap: 40px;
     }
     #healthDisplay, #killDisplay, #knackiDisplay, #ammoDisplay {
       font-size: 20px;
@@ -67,7 +66,6 @@
       align-items: center;
       text-shadow: 0 0 5px black;
     }
-    /* S'assurer que le texte des spans ne se duplique pas */
     #healthDisplay span, 
     #killDisplay span, 
     #knackiDisplay span, 
@@ -120,7 +118,7 @@
       border-radius: 50%;
       z-index: 100;
     }
-    /* Canvas HUD pour le timer placé en bas à droite */
+    /* Canvas HUD pour le timer */
     #hud {
       position: absolute;
       bottom: 10px;
@@ -207,7 +205,6 @@
     // Détection d'un appareil mobile.
     if (/Mobi|Android/i.test(navigator.userAgent)) {
       document.addEventListener("DOMContentLoaded", function() {
-        // Remplacement du contenu de la page par une interface dédiée pour mobile, avec texte centré.
         document.body.innerHTML = `
           <div id="mobileNotice" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:20px;box-sizing:border-box;text-align:center;">
             <h1 style="font-family: 'Nosifer', cursive; font-size:48px; margin-bottom:20px;">Jeu non compatible mobile</h1>
@@ -218,7 +215,6 @@
           </div>
         `;
         document.getElementById("backToHome").addEventListener("click", function() {
-          // Redirige vers un autre site.
           window.location.href = "https://hongus.neocities.org/";
         });
       });
@@ -228,7 +224,6 @@
 <body>
   <!-- Affichage du jeu -->
   <div id="crosshair"></div>
-  <!-- Conteneur HUD pour Health, Kills et Knacki -->
   <div id="hudTop">
     <div id="healthDisplay">
       <img class="icon" src="https://cdn.freebiesupply.com/logos/large/2x/heart-logo-png-transparent.png" alt="Health"/>
@@ -248,15 +243,12 @@
     <span>Ammo: 10</span>
   </div>
   <div id="reloadMessage">R pour recharger</div>
-  <!-- Invite de ramassage -->
   <div id="pickupPrompt">E pour ramasser</div>
   <canvas id="minimap" width="200" height="200"></canvas>
-  <!-- Canvas HUD pour le timer placé en bas à droite -->
   <canvas id="hud" width="250" height="60"></canvas>
 
   <!-- Menus -->
   <div id="startMenu" class="menu-overlay">
-    <!-- Image ajoutée dans le menu principal -->
     <img src="https://i.imgur.com/Z9IO5Qf.png" alt="Image du menu" style="width:200px; margin-bottom:20px;">
     <h1>KnackiMafia</h1>
     <p>
@@ -275,7 +267,6 @@
     <img src="https://i.pinimg.com/736x/a8/e9/6a/a8e96a9887710065d97495e078630081.jpg" alt="Vous êtes mort">
     <h1>T'es mort !!! INCAPABLE !!</h1>
     <h2 id="deathStats"></h2>
-    <!-- Les boutons seront recréés dynamiquement dans gameOver() -->
   </div>
   <div id="victoryMenu" class="menu-overlay" style="display: none;">
     <h1>BRAVO VOUS ALLEZ POUVOIR BIEN MLANEGR AVEC CES KNACKIS</h1>
@@ -291,23 +282,21 @@
     // -------------------------------------
     // DÉFINITION DES PARAMÈTRES DE DIFFICULTÉ
     // -------------------------------------
-    // Le slider va de 0 (très facile) à 100 (très difficile)
-    let difficultyValue = 50; // valeur par défaut
-    // Fonction de linéarisation
+    // Valeur par défaut du slider (0: très facile, 100: très difficile)
+    let difficultyValue = 50;
     function lerp(a, b, t) {
       return a + (b - a) * t;
     }
-    // Calcule les paramètres en fonction de la valeur du slider
+    // Ici, on réduit la difficulté générale et on augmente la vie du joueur en mode facile/moyen
     function getDifficultyParams(val) {
-      let t = val / 100; // t entre 0 et 1
+      let t = val / 100;
       return {
-        enemySpawnFactor: lerp(0.5, 2.0, t),  // Moins d'ennemis en facile, plus en difficile
-        enemySpeed: lerp(0.8, 2.0, t),          // Vitesse des ennemis
-        bossSpeed: lerp(0.8, 2.0, t),           // Vitesse du boss
-        playerHealth: Math.round(lerp(200, 50, t))// Plus de vie en facile, moins en difficile
+        enemySpawnFactor: lerp(0.3, 1.2, t),
+        enemySpeed: lerp(0.7, 1.8, t),
+        bossSpeed: lerp(0.7, 1.8, t),
+        playerHealth: Math.round(lerp(250, 80, t))
       };
     }
-    // On calculera ces paramètres lors du démarrage du jeu
     let difficultyParams = getDifficultyParams(difficultyValue);
 
     // -------------------------------------
@@ -377,7 +366,7 @@
       'https://i.imgur.com/8UDDzVg.jpeg'
     ];
     scene.background = cubeTextureLoader.load(skyboxImages);
-
+    
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const offsetX = mazeCols / 2 - 0.5, offsetZ = mazeRows / 2 - 0.5, playerHeight = 1.5;
     camera.position.set((spawnCell.j - offsetX) * cellSize, playerHeight, (spawnCell.i - offsetZ) * cellSize);
@@ -386,7 +375,7 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
     document.body.appendChild(renderer.domElement);
-
+    
     // -------------------------------------
     // AUDIO & LISTENER
     // -------------------------------------
@@ -410,7 +399,6 @@
     new THREE.AudioLoader().load('https://files.catbox.moe/2ta8rv.mp3', buffer => { 
       reloadSound.setBuffer(buffer); reloadSound.setVolume(0.5); 
     });
-    // Sons du boss
     const bossLoopSound = new THREE.PositionalAudio(listener);
     bossLoopSound.setDistanceModel('linear');
     bossLoopSound.setRefDistance(4);
@@ -425,7 +413,7 @@
       bossHitSound.setBuffer(buffer);
       bossHitSound.setVolume(1.0);
     });
-
+    
     // -------------------------------------
     // LUMIÈRE
     // -------------------------------------
@@ -434,7 +422,7 @@
     flashlight.position.copy(camera.position);
     scene.add(flashlight);
     scene.add(flashlight.target);
-
+    
     // -------------------------------------
     // SOL
     // -------------------------------------
@@ -451,7 +439,7 @@
       ground.material.map = tex;
       ground.material.needsUpdate = true;
     });
-
+    
     // -------------------------------------
     // CHARGEMENT DES TEXTURES DE DÉCOR
     // -------------------------------------
@@ -543,9 +531,9 @@
         }
       }
     }).catch(err => console.error(err));
-
+    
     // -------------------------------------
-    // FONCTIONS DE CRÉATION D'ARBRES AVEC VARIANTES
+    // FONCTIONS DE CRÉATION D'ARBRES
     // -------------------------------------
     function createRandomTree(x, z, cellSize, treeMat) {
       const variant = Math.floor(Math.random() * 3);
@@ -605,17 +593,16 @@
       tree.position.set(x, 0, z);
       return tree;
     }
-
+    
     // -------------------------------------
     // CHARGEMENT DE LA TEXTURE POUR LE "KNACKI"
     // -------------------------------------
-    // Nous chargeons une texture pour le sprite qui remplacera l'objet knacki
     let knackiTexture = null;
     const knackiTextureURL = "https://i.imgur.com/GmJDKHQ.jpeg";
     new THREE.TextureLoader().load(knackiTextureURL, texture => {
       knackiTexture = texture;
     });
-
+    
     // -------------------------------------
     // UTILITAIRES SUPPLÉMENTAIRES
     // -------------------------------------
@@ -627,11 +614,10 @@
       const cell = getRandomSafeCell(spawnCell);
       return { x: (cell.j - offsetX) * cellSize, z: (cell.i - offsetZ) * cellSize };
     }
-
+    
     // -------------------------------------
     // ENNEMIS
     // -------------------------------------
-    // Ajout de plusieurs URL pour les textures ennemies
     const enemyURLs = [
       "https://i.imgur.com/dV8GRk2.png",
       "https://i.imgur.com/QIwjfsp.jpeg",
@@ -651,13 +637,11 @@
     });
     class Enemy {
       constructor(pos) {
-        // Choisir aléatoirement une texture parmi enemyTextures
         const randomIndex = Math.floor(Math.random() * enemyTextures.length);
         const mat = new THREE.SpriteMaterial({ map: enemyTextures[randomIndex], transparent: true, alphaTest: 0.5 });
         this.sprite = new THREE.Sprite(mat);
         this.sprite.scale.set(1.5, 1.5, 1.5);
         this.sprite.position.set(pos.x, 1.2, pos.z);
-        // Vitesse ajustée selon la difficulté
         this.speed = 2 * difficultyParams.enemySpeed;
       }
       update(delta, playerPos) {
@@ -668,7 +652,7 @@
         }
       }
     }
-
+    
     // -------------------------------------
     // BOSS (MODE "WANDERING" ET "AGGRESSIVE")
     // -------------------------------------
@@ -749,7 +733,7 @@
       scene.add(bossEnemy.sprite);
       bossEnemy.sprite.add(bossLoopSound);
     }
-
+    
     // -------------------------------------
     // COLLECTE DE KNACKI (remplacé par un sprite)
     // -------------------------------------
@@ -765,13 +749,10 @@
       const cell = safeCells[Math.floor(Math.random() * safeCells.length)];
       const x = (cell.j - offsetX) * cellSize;
       const z = (cell.i - offsetZ) * cellSize;
-      // Si la texture de knacki est déjà chargée, créez un sprite
       if (knackiTexture) {
         const knackiMat = new THREE.SpriteMaterial({ map: knackiTexture, transparent: true, alphaTest: 0.5 });
         const knackiSprite = new THREE.Sprite(knackiMat);
-        // Ajustez l'échelle pour obtenir la taille souhaitée (ici 1.5 peut être modifié)
         knackiSprite.scale.set(1.5, 1.5, 1.5);
-        // Positionné légèrement au-dessus du sol
         knackiSprite.position.set(x, 1, z);
         knackiSprite.castShadow = true;
         scene.add(knackiSprite);
@@ -783,7 +764,7 @@
         spawnKnacki();
       }
     }, 25000);
-
+    
     // -------------------------------------
     // VARIABLES DU JOUEUR, DÉPLACEMENT, BALLES, ETC.
     // -------------------------------------
@@ -794,7 +775,7 @@
     const ammoDisplaySpan = document.getElementById("ammoDisplay").querySelector("span");
     const healthDisplaySpan = document.getElementById("healthDisplay").querySelector("span");
     const killDisplaySpan = document.getElementById("killDisplay").querySelector("span");
-
+    
     document.addEventListener("keydown", e => {
       keys[e.code] = true;
       if (e.code === "KeyR") {
@@ -809,7 +790,7 @@
         pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
       }
     });
-
+    
     const playerMesh = new THREE.Mesh(
       new THREE.SphereGeometry(0.2, 16, 16),
       new THREE.MeshBasicMaterial({ color: 0x00ff00 })
@@ -817,14 +798,14 @@
     playerMesh.position.copy(camera.position);
     playerMesh.castShadow = true;
     scene.add(playerMesh);
-
+    
     const updateAmmo = () => {
       ammoDisplaySpan.innerText = `Ammo: ${currentAmmo}`;
       reloadMessageEl.style.display = currentAmmo === 0 ? "block" : "none";
     };
     const updateHealth = () => { healthDisplaySpan.innerText = `Health: ${health}`; };
     const updateKills = () => { killDisplaySpan.innerText = `Kills: ${killCount}`; };
-
+    
     function reloadAmmo() {
       if (!isReloading && currentAmmo < 10) {
         isReloading = true;
@@ -836,7 +817,7 @@
         }, 1000);
       }
     }
-
+    
     const bullets = [];
     function shoot() {
       if (gameState !== "playing") return;
@@ -857,13 +838,13 @@
       shootSound.play();
     }
     document.addEventListener("click", shoot);
-
+    
     const tempBox = new THREE.Box3();
     function sphereVsWall(sphere, wall) {
       tempBox.setFromObject(wall);
       return tempBox.intersectsSphere(sphere);
     }
-
+    
     // -------------------------------------
     // MINI‑CARTE
     // -------------------------------------
@@ -882,7 +863,7 @@
       camera.getWorldDirection(forward);
       miniCtx.translate(cx, cy);
       miniCtx.rotate(-Math.atan2(forward.x, -forward.z));
-
+    
       miniCtx.fillStyle = "#333";
       if (window.walls) {
         window.walls.forEach(wall => {
@@ -926,11 +907,11 @@
       miniCtx.lineWidth = 2;
       miniCtx.stroke();
     }
-
+    
     // -------------------------------------
     // GESTION DES MENUS ET DE L'ÉTAT DU JEU
     // -------------------------------------
-    let gameState = "start"; // "start", "playing", "dead", "victory"
+    let gameState = "start";
     let startTime = 0;
     function showStartMenu() {
       gameState = "start";
@@ -950,7 +931,6 @@
       hideMenus();
       gameState = "playing";
       startTime = performance.now();
-      // On recalcule les paramètres de difficulté une fois pour toutes
       difficultyParams = getDifficultyParams(difficultyValue);
       health = difficultyParams.playerHealth;
       updateHealth();
@@ -981,7 +961,6 @@
       `;
       deathMenu.style.display = "flex";
       document.getElementById("restartButtonDeath").addEventListener("click", () => location.reload());
-      // Le bouton "Accueil" du menu de mort redirige maintenant vers l'index
       document.getElementById("accueilButtonDeath").addEventListener("click", () => window.location.href = "index.html");
     }
     function victory() {
@@ -998,7 +977,7 @@
     document.getElementById("accueilButtonStart").addEventListener("click", () => window.location.href = "https://hongus.neocities.org/");
     document.getElementById("restartButtonVictory").addEventListener("click", () => location.reload());
     document.getElementById("accueilButtonVictory").addEventListener("click", () => window.location.href = "https://hongus.neocities.org/");
-
+    
     // -------------------------------------
     // GESTION DU SLIDER DE DIFFICULTÉ
     // -------------------------------------
@@ -1006,10 +985,14 @@
     const difficultyLabel = document.getElementById("difficultyLabel");
     function updateDifficultyLabel(val) {
       difficultyValue = parseInt(val, 10);
-      let labelText = "Moyen";
+      let labelText = "";
       if (difficultyValue < 25) {
         labelText = "Facile";
-      } else if (difficultyValue > 66) {
+      } else if (difficultyValue < 50) {
+        labelText = "Moyen";
+      } else if (difficultyValue < 75) {
+        labelText = "Intermédiaire";
+      } else {
         labelText = "Difficile";
       }
       difficultyLabel.innerText = "Difficulté : " + labelText;
@@ -1017,8 +1000,8 @@
     difficultySlider.addEventListener("input", e => {
       updateDifficultyLabel(e.target.value);
     });
-    updateDifficultyLabel(difficultySlider.value); // initialisation
-
+    updateDifficultyLabel(difficultySlider.value);
+    
     // -------------------------------------
     // HUD (Timer et icône)
     // -------------------------------------
@@ -1035,7 +1018,7 @@
       hudCtx.fillStyle = "#ff0000";
       hudCtx.fillText("Time: " + elapsedTime.toFixed(1) + " s", 55, 35);
     }
-
+    
     // -------------------------------------
     // COLLECTE MANUELLE DES KNACKI
     // -------------------------------------
@@ -1058,12 +1041,12 @@
         }
       }
     });
-
+    
     // -------------------------------------
     // SPAWN CONTINU DES ENNEMIS
     // -------------------------------------
     let lastEnemySpawnTime = 0;
-
+    
     // -------------------------------------
     // BOUCLE D'ANIMATION
     // -------------------------------------
@@ -1080,8 +1063,7 @@
         camera.getWorldDirection(d);
         flashlight.target.position.copy(camera.position).add(d);
         flashlight.target.updateMatrixWorld();
-
-        // SPAWN CONTINU DES ENNEMIS
+    
         let enemySpawnInterval = Math.max((2 - (elapsedTime / 60)) / difficultyParams.enemySpawnFactor, 0.5);
         if (elapsedTime - lastEnemySpawnTime >= enemySpawnInterval) {
           const pos = getEnemySpawn();
@@ -1090,7 +1072,7 @@
           enemies.push(enemy);
           lastEnemySpawnTime = elapsedTime;
         }
-
+    
         const move = new THREE.Vector3();
         if (keys["KeyW"]) move.z -= 1;
         if (keys["KeyS"]) move.z += 1;
@@ -1106,8 +1088,7 @@
         }
         camera.position.y = playerHeight;
         playerMesh.position.copy(camera.position);
-
-        // Mise à jour des balles
+    
         for (let i = bullets.length - 1; i >= 0; i--) {
           const bullet = bullets[i];
           bullet.position.add(bullet.userData.velocity);
@@ -1135,8 +1116,7 @@
             bullets.splice(i, 1);
           }
         }
-
-        // Mise à jour des ennemis
+    
         for (let i = enemies.length - 1; i >= 0; i--) {
           enemies[i].update(delta, camera.position);
           if (enemies[i].sprite.position.distanceTo(camera.position) < 0.5) {
@@ -1151,8 +1131,7 @@
             }
           }
         }
-
-        // Mise à jour du boss
+    
         if (bossEnemy) {
           bossEnemy.update(delta, camera.position, elapsedTime);
           const dist = bossEnemy.sprite.position.distanceTo(camera.position);
@@ -1171,8 +1150,7 @@
             bossLoopSound.play().catch(err => console.error(err));
           }
         }
-
-        // Gestion du ramassage des knacki
+    
         if (knackiCollectibles.length > 0) {
           raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
           const intersects = raycaster.intersectObjects(knackiCollectibles);
