@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Labyrinthe 3D – Horror Game Old School</title>
+  <!-- Politique CSP mise à jour -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline';
+    style-src 'self' https://fonts.googleapis.com 'unsafe-inline';
+    img-src 'self' https://cdn.freebiesupply.com https://pngimg.com https://i.pinimg.com https://png.pngtree.com https://via.placeholder.com https://i.imgur.com https://cdn-icons-png.flaticon.com;
+    connect-src 'self' https://raw.githubusercontent.com data: blob:;
+    font-src 'self' https://fonts.gstatic.com;">
+  
+  <!-- Chargement des polices -->
+  <link href="https://fonts.googleapis.com/css2?family=Nosifer&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Styles de base */
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      color: #eee;
+      overflow: hidden;
+      font-family: 'Nosifer', cursive;
+    }
+    canvas {
+      display: block;
+      image-rendering: pixelated;
+    }
+    /* Crosshair style */
+    #crosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 30px;
+      height: 30px;
+      margin: -15px;
+      pointer-events: none;
+      filter: drop-shadow(0 0 5px red);
+    }
+    #crosshair:before, #crosshair:after {
+      content: "";
+      position: absolute;
+      background: red;
+      border-radius: 2px;
+    }
+    #crosshair:before {
+      left: 14px;
+      top: 0;
+      width: 2px;
+      height: 30px;
+    }
+    #crosshair:after {
+      top: 14px;
+      left: 0;
+      width: 30px;
+      height: 2px;
+    }
+    /* HUD & affichages */
+    #hudTop {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 40px;
+    }
+    #healthDisplay, #killDisplay, #knackiDisplay, #ammoDisplay {
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      text-shadow: 0 0 5px black;
+    }
+    #healthDisplay span, 
+    #killDisplay span, 
+    #knackiDisplay span, 
+    #ammoDisplay span {
+      display: inline-block;
+    }
+    #ammoDisplay {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+    }
+    .icon {
+      width: 28px;
+      height: 28px;
+      margin-right: 5px;
+      filter: contrast(1.5) brightness(0.8);
+    }
+    #reloadMessage {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-15px);
+      color: #ffae00;
+      font-size: 24px;
+      z-index: 100;
+      display: none;
+      text-shadow: 0 0 5px black;
+    }
+    /* Texte d'invite pour ramasser une knacki */
+    #pickupPrompt {
+      position: absolute;
+      bottom: 20%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      color: #fff;
+      z-index: 110;
+      display: none;
+      text-shadow: 0 0 5px black;
+    }
+    /* Mini-carte */
+    #minimap {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 200px;
+      height: 200px;
+      background: rgba(0,0,0,0.7);
+      border: 2px solid #ff0000;
+      border-radius: 50%;
+      z-index: 100;
+    }
+    /* Canvas HUD pour le timer */
+    #hud {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      width: 250px;
+      height: 60px;
+      z-index: 150;
+      pointer-events: none;
+    }
+    /* Styles pour les menus */
+    .menu-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      color: #ff0000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 300;
+      text-align: center;
+      backdrop-filter: blur(3px);
+    }
+    .menu-overlay h1 {
+      font-size: 56px;
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px black;
+    }
+    .menu-overlay p {
+      font-size: 22px;
+      margin-bottom: 30px;
+      max-width: 600px;
+      line-height: 1.4;
+      text-shadow: 0 0 5px black;
+    }
+    .menu-overlay button {
+      font-size: 24px;
+      margin: 10px;
+      padding: 12px 24px;
+      background: linear-gradient(145deg, #1a1a1a, #000);
+      color: #ff0000;
+      border: 2px solid #ff0000;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Creepster', cursive;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+    }
+    .menu-overlay button:hover {
+      background: linear-gradient(145deg, #ff1a1a, #ff0000);
+      color: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 12px rgba(0, 0, 0, 0.7);
+    }
+    .menu-overlay button:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+    }
+    #difficultyContainer {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    #difficultyLabel {
+      font-size: 24px;
+      margin-bottom: 10px;
+      color: #ff0000;
+    }
+    #difficultySlider {
+      width: 300px;
+    }
+  </style>
+  <script>
+    // Détection d'appareil mobile
+    if (/Mobi|Android/i.test(navigator.userAgent)) {
+      document.addEventListener("DOMContentLoaded", function() {
+        document.body.innerHTML = `
+          <div id="mobileNotice" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:20px;box-sizing:border-box;text-align:center;">
+            <h1 style="font-family: 'Nosifer', cursive; font-size:48px; margin-bottom:20px;">Jeu non compatible mobile</h1>
+            <p style="font-size:20px; margin-bottom:30px; max-width:600px;">
+              Ce jeu est conçu pour être joué sur ordinateur. Pour profiter pleinement de l'expérience, veuillez revenir sur un ordinateur.
+            </p>
+            <button id="backToHome" style="font-size:24px; padding:12px 24px; background:#1a1a1a; color:#ff0000; border:2px solid #ff0000; border-radius:8px; cursor:pointer; font-family: 'Creepster', cursive;">Revenir à l'accueil</button>
+          </div>
+        `;
+        document.getElementById("backToHome").addEventListener("click", function() {
+          window.location.href = "index.html";
+        });
+      });
+    }
+  </script>
+</head>
+<body>
+  <!-- Affichage du jeu -->
+  <div id="crosshair"></div>
+  <!-- Conteneur HUD -->
+  <div id="hudTop">
+    <div id="healthDisplay">
+      <img class="icon" src="https://cdn.freebiesupply.com/logos/large/2x/heart-logo-png-transparent.png" alt="Health"/>
+      <span>Health: 100</span>
+    </div>
+    <div id="killDisplay">
+      <img class="icon" src="https://pngimg.com/d/skull_PNG112719.png" alt="Kills"/>
+      <span>Kills: 0</span>
+    </div>
+    <div id="knackiDisplay">
+      <img class="icon" src="https://i.pinimg.com/736x/c3/5c/3a/c35c3a870fc3510cc1de6ccd332716e5.jpg" alt=""/>
+      <span></span>
+    </div>
+  </div>
+  <div id="ammoDisplay">
+    <img class="icon" src="https://png.pngtree.com/png-vector/20220610/ourmid/pngtree-gold-bullets-with-steel-tips-realistic-composition-isolated-on-white-background-png-image_4957667.png" alt="Ammo"/>
+    <span>Ammo: 10</span>
+  </div>
+  <div id="reloadMessage">R pour recharger</div>
+  <!-- Invite ramassage -->
+  <div id="pickupPrompt">E pour ramasser</div>
+  <canvas id="minimap" width="200" height="200"></canvas>
+  <canvas id="hud" width="250" height="60"></canvas>
+
+  <!-- Menus -->
+  <div id="startMenu" class="menu-overlay">
+    <h1>Labyrinthe 3D</h1>
+    <p>
+      Réglez la difficulté à l'aide du curseur, puis appuyez sur "Démarrer".<br>
+      Utilisez WASD pour vous déplacer, la souris pour regarder et cliquez pour tirer.<br>
+      Évitez les ennemis et collectez 6 knacki pour gagner.
+    </p>
+    <div id="difficultyContainer">
+      <div id="difficultyLabel">Difficulté : Moyen</div>
+      <input type="range" id="difficultySlider" min="0" max="100" value="50">
+    </div>
+    <button id="startButton">Démarrer</button>
+    <button id="accueilButtonStart">Accueil</button>
+  </div>
+  <div id="deathMenu" class="menu-overlay" style="display: none;">
+    <img src="https://via.placeholder.com/150?text=Vous+%C3%AAtes+mort" alt="Vous êtes mort" style="margin-bottom:20px;">
+    <h1>Vous êtes mort</h1>
+    <h2 id="deathStats"></h2>
+    <button id="restartButtonDeath">Recommencer</button>
+    <button id="accueilButtonDeath">Accueil</button>
+  </div>
+  <div id="victoryMenu" class="menu-overlay" style="display: none;">
+    <h1>Vous avez collecté toutes les knacki !</h1>
+    <p id="scoreText">Score : </p>
+    <button id="restartButtonVictory">Recommencer</button>
+    <button id="accueilButtonVictory">Accueil</button>
+  </div>
+
+  <!-- Chargement de THREE.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    "use strict";
+    // -------------------------------------
+    // Paramètres de difficulté
+    let difficultyValue = 50;
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function getDifficultyParams(val) {
+      let t = val / 100;
+      return {
+        enemySpawnFactor: lerp(0.5, 2.0, t),
+        enemySpeed: lerp(0.8, 2.0, t),
+        bossSpeed: lerp(0.8, 2.0, t),
+        playerHealth: Math.round(lerp(200, 50, t))
+      };
+    }
+    let difficultyParams = getDifficultyParams(difficultyValue);
+
+    // -------------------------------------
+    // Utilitaires de chargement
+    const loadTexture = url => new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => { const tex = new THREE.Texture(img); tex.needsUpdate = true; resolve(tex); };
+      img.onerror = () => reject(new Error("Erreur de chargement " + url));
+      img.src = url;
+    });
+    const loadTextures = urls => Promise.all(urls.map(loadTexture));
+
+    // -------------------------------------
+    // Paramètres du labyrinthe
+    const mazeCols = 50, mazeRows = 50, cellSize = 2, wallProb = 0.3, safeThresh = 3;
+    const maze = [];
+    for (let i = 0; i < mazeRows; i++) {
+      maze[i] = [];
+      for (let j = 0; j < mazeCols; j++) {
+        maze[i][j] = (i === 0 || i === mazeRows - 1 || j === 0 || j === mazeCols - 1) ? 1 : (Math.random() < wallProb ? 1 : 0);
+      }
+    }
+    const countAdj = (i, j) => {
+      let count = 0;
+      for (let di = -1; di <= 1; di++) {
+        for (let dj = -1; dj <= 1; dj++) {
+          if (di || dj) {
+            if (maze[i + di] && maze[i + di][j + dj] === 1) count++;
+          }
+        }
+      }
+      return count;
+    };
+    const safeCells = [];
+    for (let i = 1; i < mazeRows - 1; i++) {
+      for (let j = 1; j < mazeCols - 1; j++) {
+        if (maze[i][j] === 0 && countAdj(i, j) <= safeThresh) { safeCells.push({ i, j }); }
+      }
+    }
+    const spawnCell = safeCells.length ? safeCells[Math.floor(Math.random() * safeCells.length)] : { i: Math.floor(mazeRows / 2), j: Math.floor(mazeCols / 2) };
+
+    // -------------------------------------
+    // Scène, caméra, renderer
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
+    const cubeTextureLoader = new THREE.CubeTextureLoader();
+    const skyboxImages = [
+      'https://i.imgur.com/letiiDk.jpeg',
+      'https://i.imgur.com/yLdeQGz.jpeg',
+      'https://i.imgur.com/soQHBMK.jpeg',
+      'https://i.imgur.com/FmRBMuV.jpeg',
+      'https://i.imgur.com/nm0BOjx.jpeg',
+      'https://i.imgur.com/8UDDzVg.jpeg'
+    ];
+    scene.background = cubeTextureLoader.load(skyboxImages);
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const offsetX = mazeCols / 2 - 0.5, offsetZ = mazeRows / 2 - 0.5, playerHeight = 1.5;
+    camera.position.set((spawnCell.j - offsetX) * cellSize, playerHeight, (spawnCell.i - offsetZ) * cellSize);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(0.3);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    document.body.appendChild(renderer.domElement);
+
+    // -------------------------------------
+    // Audio et listener
+    const listener = new THREE.AudioListener();
+    camera.add(listener);
+    document.body.addEventListener("click", () => {
+      if (listener.context.state === "suspended") listener.context.resume();
+      if (document.pointerLockElement !== document.body && gameState === "playing") {
+        document.body.requestPointerLock();
+      }
+    });
+    const shootSound = new THREE.Audio(listener),
+          hitSound = new THREE.Audio(listener),
+          reloadSound = new THREE.Audio(listener);
+    // Chargement des sons (URLs raw)
+    new THREE.AudioLoader().load('https://raw.githubusercontent.com/Grtae/htmlaudio/main/GUNPis_Coup%20de%20feu%20de%20357%20magnum%209%20mm%20(ID%200438)_LS.mp3', buffer => { 
+      shootSound.setBuffer(buffer); shootSound.setVolume(0.5); 
+    });
+    new THREE.AudioLoader().load('https://raw.githubusercontent.com/Grtae/htmlaudio/main/hit-flesh-03-266308.mp3', buffer => { 
+      hitSound.setBuffer(buffer); hitSound.setVolume(0.5); 
+    });
+    new THREE.AudioLoader().load('https://raw.githubusercontent.com/Grtae/htmlaudio/main/calm-slow-reloading.mp3', buffer => { 
+      reloadSound.setBuffer(buffer); reloadSound.setVolume(0.5); 
+    });
+    const bossLoopSound = new THREE.PositionalAudio(listener);
+    bossLoopSound.setDistanceModel('linear');
+    bossLoopSound.setRefDistance(4);
+    bossLoopSound.setMaxDistance(20);
+    bossLoopSound.setRolloffFactor(1);
+    new THREE.AudioLoader().load('https://raw.githubusercontent.com/Grtae/htmlaudio/main/SCARING%20THE%20HOES.mp3', buffer => {
+      bossLoopSound.setBuffer(buffer);
+      bossLoopSound.setLoop(true);
+    });
+    const bossHitSound = new THREE.Audio(listener);
+    new THREE.AudioLoader().load('https://raw.githubusercontent.com/Grtae/htmlaudio/main/VOXScrm_Hurlement%201%20garcon%20(ID%201664)_LS.wav', buffer => {
+      bossHitSound.setBuffer(buffer);
+      bossHitSound.setVolume(1.0);
+    });
+
+    // -------------------------------------
+    // Lumière
+    const flashlight = new THREE.SpotLight(0xffffff, 3, 40, Math.PI / 8, 0.5);
+    flashlight.castShadow = true;
+    flashlight.position.copy(camera.position);
+    scene.add(flashlight);
+    scene.add(flashlight.target);
+
+    // -------------------------------------
+    // Sol
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(mazeCols * cellSize * 2, mazeRows * cellSize * 2),
+      new THREE.MeshStandardMaterial({ color: 0x222222 })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+    loadTexture("https://i.imgur.com/ZWHSjeB.jpeg").then(tex => {
+      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(mazeCols, mazeRows);
+      ground.material.map = tex;
+      ground.material.needsUpdate = true;
+    });
+
+    // -------------------------------------
+    // Textures de décor
+    const wallTextureURL = "https://i.imgur.com/2kwexnI.jpeg";
+    const treeTextureURLs = [
+      "https://i.imgur.com/B6qerGA.png", 
+      "https://i.imgur.com/B6qerGA.png"
+    ];
+    const interiorBlockTextureURLs = [
+      "https://i.imgur.com/5KXrN6V.png",
+      "https://i.imgur.com/dJjLh9E.png"
+    ];
+    Promise.all([
+      loadTexture(wallTextureURL),
+      loadTextures(treeTextureURLs),
+      loadTextures(interiorBlockTextureURLs)
+    ]).then(textures => {
+      const wallTex = textures[0],
+            treeTextures = textures[1],
+            interiorBlockTextures = textures[2];
+      wallTex.wrapS = wallTex.wrapT = THREE.RepeatWrapping;
+      const wallMat = new THREE.MeshStandardMaterial({ map: wallTex });
+      const treeMats = treeTextures.map(tex => new THREE.MeshStandardMaterial({
+        map: tex,
+        color: 0x000000,
+        transparent: true,
+        side: THREE.DoubleSide,
+        alphaTest: 0.5
+      }));
+      const interiorBlockMats = interiorBlockTextures.map(tex => new THREE.MeshStandardMaterial({
+        map: tex,
+        transparent: true,
+        side: THREE.DoubleSide,
+        alphaTest: 0.5
+      }));
+      const wallGeo = new THREE.BoxGeometry(cellSize, 2, cellSize);
+      window.walls = [];
+      for (let i = 0; i < mazeRows; i++) {
+        for (let j = 0; j < mazeCols; j++) {
+          if (maze[i][j] === 1) {
+            const x = (j - offsetX) * cellSize, z = (i - offsetZ) * cellSize;
+            if (i === 0 || i === mazeRows - 1 || j === 0 || j === mazeCols - 1) {
+              const m = new THREE.Mesh(wallGeo, wallMat);
+              m.position.set(x, 1, z);
+              m.castShadow = m.receiveShadow = true;
+              scene.add(m);
+              walls.push(m);
+            } else {
+              const centerRow = mazeRows / 2, centerCol = mazeCols / 2, distance = Math.hypot(i - centerRow, j - centerCol);
+              let treeProbability = (distance < 10) ? 0.9 : 0.8;
+              if (Math.random() < treeProbability) {
+                const randomTreeMat = treeMats[Math.floor(Math.random() * treeMats.length)];
+                const tree = createRandomTree(x, z, cellSize, randomTreeMat);
+                scene.add(tree);
+              } else {
+                const randomBlockMat = interiorBlockMats[Math.floor(Math.random() * interiorBlockMats.length)];
+                const scale = 0.8 + Math.random() * 0.4;
+                const blockGeo = new THREE.BoxGeometry(cellSize * scale, 2 * scale, cellSize * scale);
+                const block = new THREE.Mesh(blockGeo, randomBlockMat);
+                block.position.set(x, (2 * scale) / 2, z);
+                block.castShadow = block.receiveShadow = true;
+                scene.add(block);
+                walls.push(block);
+              }
+            }
+          }
+        }
+      }
+    }).catch(err => console.error(err));
+
+    // -------------------------------------
+    // Fonctions de création d'arbres
+    function createRandomTree(x, z, cellSize, treeMat) {
+      const variant = Math.floor(Math.random() * 3);
+      switch (variant) {
+        case 0: return createTreeVariant1(x, z, cellSize, treeMat);
+        case 1: return createTreeVariant2(x, z, cellSize, treeMat);
+        case 2: return createTreeVariant3(x, z, cellSize, treeMat);
+        default: return createTreeVariant1(x, z, cellSize, treeMat);
+      }
+    }
+    function createTreeVariant1(x, z, cellSize, treeMat) {
+      const tree = new THREE.Group();
+      const treeScaleFactor = 3;
+      const width = cellSize * treeScaleFactor, height = 3 * treeScaleFactor;
+      const geometry = new THREE.PlaneGeometry(width, height);
+      const plane1 = new THREE.Mesh(geometry, treeMat);
+      const plane2 = new THREE.Mesh(geometry, treeMat);
+      plane1.position.set(0, height / 2, 0);
+      plane2.position.set(0, height / 2, 0);
+      plane2.rotation.y = Math.PI / 2;
+      tree.add(plane1, plane2);
+      tree.position.set(x, 0, z);
+      return tree;
+    }
+    function createTreeVariant2(x, z, cellSize, treeMat) {
+      const tree = new THREE.Group();
+      const treeScaleFactor = 3;
+      const width = cellSize * 0.9 * treeScaleFactor, height = 3.5 * treeScaleFactor;
+      const geometry = new THREE.PlaneGeometry(width, height);
+      for (let i = 0; i < 3; i++) {
+        const plane = new THREE.Mesh(geometry, treeMat);
+        plane.position.set(0, height / 2, 0);
+        plane.rotation.y = (i * Math.PI * 2) / 3;
+        tree.add(plane);
+      }
+      tree.position.set(x, 0, z);
+      return tree;
+    }
+    function createTreeVariant3(x, z, cellSize, treeMat) {
+      const tree = new THREE.Group();
+      const treeScaleFactor = 3;
+      const baseWidth = cellSize * treeScaleFactor, baseHeight = 3 * treeScaleFactor;
+      const width1 = baseWidth * (0.8 + Math.random() * 0.4);
+      const height1 = baseHeight * (0.9 + Math.random() * 0.3);
+      const geometry1 = new THREE.PlaneGeometry(width1, height1);
+      const plane1 = new THREE.Mesh(geometry1, treeMat);
+      plane1.position.set(0, height1 / 2, 0);
+      plane1.rotation.y = Math.random() * Math.PI * 2;
+      tree.add(plane1);
+      const width2 = baseWidth * (0.8 + Math.random() * 0.4);
+      const height2 = baseHeight * (0.9 + Math.random() * 0.3);
+      const geometry2 = new THREE.PlaneGeometry(width2, height2);
+      const plane2 = new THREE.Mesh(geometry2, treeMat);
+      plane2.position.set(0, height2 / 2, 0);
+      plane2.rotation.y = plane1.rotation.y + (Math.PI / 2 + (Math.random() - 0.5) * 0.5);
+      tree.add(plane2);
+      tree.position.set(x, 0, z);
+      return tree;
+    }
+
+    // -------------------------------------
+    // Utilitaires supplémentaires
+    function getRandomSafeCell(excludeCell) {
+      const cells = safeCells.filter(c => !(c.i === excludeCell.i && c.j === excludeCell.j));
+      return cells.length ? cells[Math.floor(Math.random() * cells.length)] : { i: Math.floor(mazeRows / 2), j: Math.floor(mazeCols / 2) };
+    }
+    function getEnemySpawn() {
+      const cell = getRandomSafeCell(spawnCell);
+      return { x: (cell.j - offsetX) * cellSize, z: (cell.i - offsetZ) * cellSize };
+    }
+
+    // -------------------------------------
+    // Ennemis
+    const enemyURLs = ["https://i.imgur.com/AQDHAvz.png"];
+    let enemyTextures = [], enemies = [];
+    loadTextures(enemyURLs).then(textures => {
+      enemyTextures = textures;
+      for (let i = 0; i < 15; i++) {
+        const pos = getEnemySpawn();
+        const enemy = new Enemy(pos);
+        scene.add(enemy.sprite);
+        enemies.push(enemy);
+      }
+    });
+    class Enemy {
+      constructor(pos) {
+        const mat = new THREE.SpriteMaterial({ map: enemyTextures[0], transparent: true, alphaTest: 0.5 });
+        this.sprite = new THREE.Sprite(mat);
+        this.sprite.scale.set(1.5, 1.5, 1.5);
+        this.sprite.position.set(pos.x, 1.2, pos.z);
+        this.speed = 2 * difficultyParams.enemySpeed;
+      }
+      update(delta, playerPos) {
+        const dir = new THREE.Vector3().subVectors(playerPos, this.sprite.position);
+        if (dir.length() > 0.01) {
+          dir.normalize();
+          this.sprite.position.add(dir.multiplyScalar(this.speed * delta));
+        }
+      }
+    }
+
+    // -------------------------------------
+    // Boss
+    let bossTexture = null, bossEnemy = null;
+    loadTextures(["https://i.imgur.com/ZWHSjeB.jpeg"]).then(textures => {
+      bossTexture = textures[0];
+      createBoss();
+    });
+    class Boss {
+      constructor(pos) {
+        const mat = new THREE.SpriteMaterial({ map: bossTexture, transparent: true, alphaTest: 0.5 });
+        this.sprite = new THREE.Sprite(mat);
+        this.sprite.scale.set(3, 3, 3);
+        this.sprite.position.set(pos.x, 1.2, pos.z);
+        this.speed = 7 * difficultyParams.bossSpeed;
+        this.wanderSpeed = this.speed * 0.5;
+        this.lastHitTime = 0;
+        this.mode = "wandering";
+        this.modeTimer = 5;
+        this.wanderTarget = null;
+        this.slowTimer = 0;
+      }
+      update(delta, playerPos, elapsedTime) {
+        const aggressionFactor = Math.max(0.5, 1 - (elapsedTime / 300));
+        if (this.slowTimer > 0) { this.slowTimer -= delta; if (this.slowTimer < 0) this.slowTimer = 0; }
+        const slowFactor = this.slowTimer > 0 ? 0.3 : 1.0;
+        this.modeTimer -= delta;
+        if (this.modeTimer <= 0) {
+          if (this.mode === "wandering") { this.mode = "aggressive"; this.modeTimer = 6; this.wanderTarget = null; }
+          else { this.mode = "wandering"; this.modeTimer = 5; }
+        }
+        const distanceToPlayer = this.sprite.position.distanceTo(playerPos);
+        if (this.mode === "wandering" && distanceToPlayer < 4) { this.mode = "aggressive"; this.modeTimer = 6; this.wanderTarget = null; }
+        if (this.mode === "aggressive") {
+          const dir = new THREE.Vector3().subVectors(playerPos, this.sprite.position);
+          const distance = dir.length();
+          if (distance > 0.01) {
+            dir.normalize();
+            const extraSpeed = distance > 5 ? (distance - 5) * 0.3 : 0;
+            const effectiveSpeed = (this.speed + extraSpeed) * slowFactor * aggressionFactor;
+            this.sprite.position.add(dir.multiplyScalar(effectiveSpeed * delta));
+          }
+        } else {
+          if (!this.wanderTarget || this.sprite.position.distanceTo(this.wanderTarget) < 0.5) {
+            const randomAngle = Math.random() * 2 * Math.PI;
+            const randomDistance = 3 + Math.random() * 4;
+            this.wanderTarget = new THREE.Vector3(
+              this.sprite.position.x + Math.cos(randomAngle) * randomDistance,
+              this.sprite.position.y,
+              this.sprite.position.z + Math.sin(randomAngle) * randomDistance
+            );
+          }
+          const wanderDir = new THREE.Vector3().subVectors(this.wanderTarget, this.sprite.position);
+          if (wanderDir.length() > 0.01) {
+            wanderDir.normalize();
+            this.sprite.position.add(wanderDir.multiplyScalar(this.wanderSpeed * slowFactor * delta * aggressionFactor));
+          }
+        }
+      }
+    }
+    function createBoss() {
+      const cell = getRandomSafeCell(spawnCell);
+      const pos = { x: (cell.j - offsetX) * cellSize, z: (cell.i - offsetZ) * cellSize };
+      bossEnemy = new Boss(pos);
+      scene.add(bossEnemy.sprite);
+      bossEnemy.sprite.add(bossLoopSound);
+    }
+
+    // -------------------------------------
+    // Collecte de knacki
+    let knackiCount = 0;
+    const maxKnacki = 6;
+    const knackiCollectibles = [];
+    function updateKnackiDisplay() {
+      const span = document.getElementById("knackiDisplay").querySelector("span");
+      span.innerText = `Knacki: ${knackiCount}/${maxKnacki}`;
+    }
+    updateKnackiDisplay();
+    function spawnKnacki() {
+      const cell = safeCells[Math.floor(Math.random() * safeCells.length)];
+      const x = (cell.j - offsetX) * cellSize, z = (cell.i - offsetZ) * cellSize;
+      const geo = new THREE.CylinderGeometry(0.2, 0.2, 0.8, 16);
+      const mat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(x, 0.4, z);
+      mesh.castShadow = true;
+      scene.add(mesh);
+      knackiCollectibles.push(mesh);
+    }
+    setInterval(() => { if (gameState === "playing" && knackiCount < maxKnacki) { spawnKnacki(); } }, 25000);
+
+    // -------------------------------------
+    // Variables du joueur, déplacement, balles, etc.
+    const baseSpeed = 3, sprintMult = 2;
+    const keys = {};
+    let yaw = 0, pitch = 0, health = difficultyParams.playerHealth, currentAmmo = 10, isReloading = false, killCount = 0;
+    const reloadMessageEl = document.getElementById("reloadMessage");
+    const ammoDisplaySpan = document.getElementById("ammoDisplay").querySelector("span");
+    const healthDisplaySpan = document.getElementById("healthDisplay").querySelector("span");
+    const killDisplaySpan = document.getElementById("killDisplay").querySelector("span");
+
+    document.addEventListener("keydown", e => { keys[e.code] = true; if (e.code === "KeyR") { reloadAmmo(); } });
+    document.addEventListener("keyup", e => { keys[e.code] = false; });
+    document.addEventListener("mousemove", e => {
+      if (document.pointerLockElement === document.body && gameState === "playing") {
+        yaw -= e.movementX * 0.002;
+        pitch -= e.movementY * 0.002;
+        pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
+      }
+    });
+    const playerMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(0.2, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+    );
+    playerMesh.position.copy(camera.position);
+    playerMesh.castShadow = true;
+    scene.add(playerMesh);
+    const updateAmmo = () => { ammoDisplaySpan.innerText = `Ammo: ${currentAmmo}`; reloadMessageEl.style.display = currentAmmo === 0 ? "block" : "none"; };
+    const updateHealth = () => { healthDisplaySpan.innerText = `Health: ${health}`; };
+    const updateKills = () => { killDisplaySpan.innerText = `Kills: ${killCount}`; };
+    function reloadAmmo() {
+      if (!isReloading && currentAmmo < 10) {
+        isReloading = true;
+        reloadSound.play();
+        setTimeout(() => { currentAmmo = 10; updateAmmo(); isReloading = false; }, 1000);
+      }
+    }
+    const bullets = [];
+    function shoot() {
+      if (gameState !== "playing" || isReloading || currentAmmo <= 0) return;
+      currentAmmo--;
+      updateAmmo();
+      const bullet = new THREE.Mesh(
+        new THREE.SphereGeometry(0.05, 8, 8),
+        new THREE.MeshBasicMaterial({ color: 0xffff00 })
+      );
+      bullet.position.copy(camera.position);
+      const dir = new THREE.Vector3();
+      camera.getWorldDirection(dir);
+      bullet.userData = { velocity: dir.multiplyScalar(0.5) };
+      scene.add(bullet);
+      bullets.push(bullet);
+      if (shootSound.isPlaying) shootSound.stop();
+      shootSound.play();
+    }
+    document.addEventListener("click", shoot);
+    const tempBox = new THREE.Box3();
+    function sphereVsWall(sphere, wall) { tempBox.setFromObject(wall); return tempBox.intersectsSphere(sphere); }
+    
+    // -------------------------------------
+    // Mini-carte
+    const miniCanvas = document.getElementById("minimap");
+    const miniCtx = miniCanvas.getContext("2d");
+    const miniScale = miniCanvas.width / (mazeCols * cellSize);
+    function drawMinimap() {
+      const w = miniCtx.canvas.width, h = miniCtx.canvas.height, cx = w / 2, cy = h / 2;
+      miniCtx.clearRect(0, 0, w, h);
+      miniCtx.save();
+      miniCtx.beginPath();
+      miniCtx.arc(cx, cy, cx, 0, Math.PI * 2);
+      miniCtx.clip();
+      const forward = new THREE.Vector3();
+      camera.getWorldDirection(forward);
+      miniCtx.translate(cx, cy);
+      miniCtx.rotate(-Math.atan2(forward.x, -forward.z));
+      miniCtx.fillStyle = "#333";
+      if (window.walls) { window.walls.forEach(wall => {
+          const x = wall.position.x - camera.position.x, z = wall.position.z - camera.position.z;
+          miniCtx.fillRect(x * miniScale, z * miniScale, cellSize * miniScale, cellSize * miniScale);
+      }); }
+      enemies.forEach(e => {
+        miniCtx.fillStyle = "#ff0000";
+        miniCtx.beginPath();
+        miniCtx.arc((e.sprite.position.x - camera.position.x) * miniScale, (e.sprite.position.z - camera.position.z) * miniScale, cellSize * miniScale * 0.3, 0, Math.PI * 2);
+        miniCtx.fill();
+      });
+      if (bossEnemy) {
+        miniCtx.fillStyle = "#FFA500";
+        miniCtx.beginPath();
+        miniCtx.arc((bossEnemy.sprite.position.x - camera.position.x) * miniScale, (bossEnemy.sprite.position.z - camera.position.z) * miniScale, cellSize * miniScale * 0.3, 0, Math.PI * 2);
+        miniCtx.fill();
+      }
+      knackiCollectibles.forEach(knacki => {
+        miniCtx.fillStyle = "#ff00ff";
+        miniCtx.beginPath();
+        miniCtx.arc((knacki.position.x - camera.position.x) * miniScale, (knacki.position.z - camera.position.z) * miniScale, cellSize * miniScale * 0.2, 0, Math.PI * 2);
+        miniCtx.fill();
+      });
+      miniCtx.restore();
+      miniCtx.save();
+      miniCtx.translate(cx, cy);
+      miniCtx.fillStyle = "#00ff00";
+      miniCtx.beginPath();
+      miniCtx.moveTo(0, -10);
+      miniCtx.lineTo(5, 5);
+      miniCtx.lineTo(-5, 5);
+      miniCtx.closePath();
+      miniCtx.fill();
+      miniCtx.restore();
+      miniCtx.beginPath();
+      miniCtx.arc(cx, cy, cx - 1, 0, Math.PI * 2);
+      miniCtx.strokeStyle = "white";
+      miniCtx.lineWidth = 2;
+      miniCtx.stroke();
+    }
+    
+    // -------------------------------------
+    // Gestion des menus et état du jeu
+    let gameState = "start";
+    let startTime = 0;
+    function showStartMenu() {
+      gameState = "start";
+      document.getElementById("startMenu").style.display = "flex";
+      document.getElementById("deathMenu").style.display = "none";
+      document.getElementById("victoryMenu").style.display = "none";
+      if (document.pointerLockElement) { document.exitPointerLock(); }
+    }
+    function hideMenus() {
+      document.getElementById("startMenu").style.display = "none";
+      document.getElementById("deathMenu").style.display = "none";
+      document.getElementById("victoryMenu").style.display = "none";
+    }
+    function startGame() {
+      hideMenus();
+      gameState = "playing";
+      startTime = performance.now();
+      difficultyParams = getDifficultyParams(difficultyValue);
+      health = difficultyParams.playerHealth;
+      updateHealth();
+      document.body.requestPointerLock();
+    }
+    function gameOver(cause = "normal") {
+      if (gameState !== "playing") return;
+      gameState = "dead";
+      if (document.pointerLockElement) { document.exitPointerLock(); }
+      const deathMenu = document.getElementById("deathMenu");
+      const elapsedTimeStr = ((performance.now() - startTime) / 1000).toFixed(1);
+      let title = (cause === "boss") ? "Le Boss vous a anéanti !" : "Vous êtes mort";
+      let imgSrc = (cause === "boss") ? "https://via.placeholder.com/150?text=Boss+a+vaincu" : "https://via.placeholder.com/150?text=Vous+%C3%AAtes+mort";
+      deathMenu.innerHTML = `
+        <img src="${imgSrc}" alt="${title}" style="margin-bottom:20px;">
+        <h1>${title}</h1>
+        <h2>Kills: ${killCount} - Temps: ${elapsedTimeStr} sec</h2>
+        <button id="restartButtonDeath">Recommencer</button>
+        <button id="accueilButtonDeath">Accueil</button>
+      `;
+      deathMenu.style.display = "flex";
+      document.getElementById("restartButtonDeath").addEventListener("click", () => location.reload());
+      document.getElementById("accueilButtonDeath").addEventListener("click", () => location.reload());
+    }
+    function victory() {
+      if (gameState !== "playing") return;
+      gameState = "victory";
+      if (document.pointerLockElement) { document.exitPointerLock(); }
+      const elapsedTime = ((performance.now() - startTime) / 1000).toFixed(1);
+      document.getElementById("scoreText").innerText = `Kills: ${killCount} - Temps: ${elapsedTime} sec`;
+      document.getElementById("victoryMenu").style.display = "flex";
+    }
+    document.getElementById("startButton").addEventListener("click", startGame);
+    document.getElementById("accueilButtonStart").addEventListener("click", () => location.reload());
+    document.getElementById("restartButtonVictory").addEventListener("click", () => location.reload());
+    document.getElementById("accueilButtonVictory").addEventListener("click", () => location.reload());
+    
+    // -------------------------------------
+    // Gestion du slider de difficulté
+    const difficultySlider = document.getElementById("difficultySlider");
+    const difficultyLabel = document.getElementById("difficultyLabel");
+    function updateDifficultyLabel(val) {
+      difficultyValue = parseInt(val, 10);
+      let labelText = (difficultyValue < 33) ? "Facile" : (difficultyValue > 66) ? "Difficile" : "Moyen";
+      difficultyLabel.innerText = "Difficulté : " + labelText;
+    }
+    difficultySlider.addEventListener("input", e => { updateDifficultyLabel(e.target.value); });
+    updateDifficultyLabel(difficultySlider.value);
+    
+    // -------------------------------------
+    // HUD (Timer et icône)
+    const hudCanvas = document.getElementById("hud");
+    const hudCtx = hudCanvas.getContext("2d");
+    const clockIcon = new Image();
+    clockIcon.src = "https://cdn-icons-png.flaticon.com/512/61/61112.png";
+    function drawHUD(elapsedTime) {
+      hudCtx.clearRect(0, 0, hudCanvas.width, hudCanvas.height);
+      if (clockIcon.complete) { hudCtx.drawImage(clockIcon, 5, 10, 40, 40); }
+      hudCtx.font = "20px Nosifer, cursive";
+      hudCtx.fillStyle = "#ff0000";
+      hudCtx.fillText("Time: " + elapsedTime.toFixed(1) + " s", 55, 35);
+    }
+    
+    // -------------------------------------
+    // Collecte manuelle des knacki
+    const raycaster = new THREE.Raycaster();
+    let currentKnackiTarget = null;
+    const pickupPromptEl = document.getElementById("pickupPrompt");
+    document.addEventListener("keydown", e => {
+      if (e.code === "KeyE" && gameState === "playing" && currentKnackiTarget) {
+        scene.remove(currentKnackiTarget);
+        const index = knackiCollectibles.indexOf(currentKnackiTarget);
+        if (index > -1) { knackiCollectibles.splice(index, 1); }
+        knackiCount++;
+        updateKnackiDisplay();
+        pickupPromptEl.style.display = "none";
+        currentKnackiTarget = null;
+        if (knackiCount >= maxKnacki) { victory(); }
+      }
+    });
+    
+    // -------------------------------------
+    // Boucle d'animation
+    let lastEnemySpawnTime = 0;
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      if (gameState === "playing") {
+        const delta = clock.getDelta();
+        const elapsedTime = (performance.now() - startTime) / 1000;
+        camera.rotation.order = "YXZ";
+        camera.rotation.set(pitch, yaw, 0);
+        flashlight.position.copy(camera.position);
+        const d = new THREE.Vector3();
+        camera.getWorldDirection(d);
+        flashlight.target.position.copy(camera.position).add(d);
+        flashlight.target.updateMatrixWorld();
+    
+        let enemySpawnInterval = Math.max((2 - (elapsedTime / 60)) / difficultyParams.enemySpawnFactor, 0.5);
+        if (elapsedTime - lastEnemySpawnTime >= enemySpawnInterval) {
+          const pos = getEnemySpawn();
+          const enemy = new Enemy(pos);
+          scene.add(enemy.sprite);
+          enemies.push(enemy);
+          lastEnemySpawnTime = elapsedTime;
+        }
+    
+        const move = new THREE.Vector3();
+        if (keys["KeyW"]) move.z -= 1;
+        if (keys["KeyS"]) move.z += 1;
+        if (keys["KeyA"]) move.x -= 1;
+        if (keys["KeyD"]) move.x += 1;
+        move.normalize().multiplyScalar(baseSpeed * delta * ((keys["ShiftLeft"] || keys["ShiftRight"]) ? sprintMult : 1));
+        move.applyQuaternion(camera.quaternion);
+        const newPos = camera.position.clone().add(move);
+        newPos.y = playerHeight;
+        const sphere = new THREE.Sphere(newPos, 0.2);
+        if (window.walls && window.walls.every(w => !sphereVsWall(sphere, w))) { camera.position.copy(newPos); }
+        camera.position.y = playerHeight;
+        playerMesh.position.copy(camera.position);
+    
+        for (let i = bullets.length - 1; i >= 0; i--) {
+          const bullet = bullets[i];
+          bullet.position.add(bullet.userData.velocity);
+          for (let j = enemies.length - 1; j >= 0; j--) {
+            if (bullet.position.distanceTo(enemies[j].sprite.position) < 0.5) {
+              if (hitSound.isPlaying) hitSound.stop();
+              hitSound.play();
+              killCount++;
+              updateKills();
+              scene.remove(enemies[j].sprite);
+              enemies.splice(j, 1);
+              scene.remove(bullet);
+              bullets.splice(i, 1);
+              break;
+            }
+          }
+          if (bossEnemy && bullet.position.distanceTo(bossEnemy.sprite.position) < 1.0) {
+            bossEnemy.slowTimer += 3;
+            scene.remove(bullet);
+            bullets.splice(i, 1);
+            continue;
+          }
+          if (bullet.position.distanceTo(camera.position) > 20) {
+            scene.remove(bullet);
+            bullets.splice(i, 1);
+          }
+        }
+    
+        for (let i = enemies.length - 1; i >= 0; i--) {
+          enemies[i].update(delta, camera.position);
+          if (enemies[i].sprite.position.distanceTo(camera.position) < 0.5) {
+            if (hitSound.isPlaying) hitSound.stop();
+            hitSound.play();
+            scene.remove(enemies[i].sprite);
+            enemies.splice(i, 1);
+            health -= 25;
+            updateHealth();
+            if (health <= 0 && gameState === "playing") { gameOver("normal"); }
+          }
+        }
+    
+        if (bossEnemy) {
+          bossEnemy.update(delta, camera.position, elapsedTime);
+          const dist = bossEnemy.sprite.position.distanceTo(camera.position);
+          bossLoopSound.setVolume(Math.max(0, 1 - (dist / 20)));
+          if (dist < 0.8 && (!bossEnemy.lastHitTime || performance.now() - bossEnemy.lastHitTime > 1000)) {
+            bossEnemy.lastHitTime = performance.now();
+            if (bossLoopSound.isPlaying) bossLoopSound.stop();
+            bossHitSound.play();
+            setTimeout(() => { health = 0; updateHealth(); gameOver("boss"); }, 500);
+          }
+          if (bossLoopSound.buffer && !bossLoopSound.isPlaying && dist >= 0.8) { bossLoopSound.play().catch(err => console.error(err)); }
+        }
+    
+        if (knackiCollectibles.length > 0) {
+          raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+          const intersects = raycaster.intersectObjects(knackiCollectibles);
+          if (intersects.length > 0 && intersects[0].distance < 3) {
+            currentKnackiTarget = intersects[0].object;
+            pickupPromptEl.style.display = "block";
+          } else { currentKnackiTarget = null; pickupPromptEl.style.display = "none"; }
+        } else { currentKnackiTarget = null; pickupPromptEl.style.display = "none"; }
+        drawHUD(elapsedTime);
+      }
+      drawMinimap();
+      renderer.render(scene, camera);
+    }
+    animate();
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
