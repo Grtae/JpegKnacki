@@ -2,20 +2,11 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Labyrinthe 3D – Horror Game Old School</title>
-  <!-- Politique CSP mise à jour -->
-  <meta http-equiv="Content-Security-Policy" content="
-    default-src 'self';
-    script-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline';
-    style-src 'self' https://fonts.googleapis.com 'unsafe-inline';
-    img-src 'self' https://cdn.freebiesupply.com https://pngimg.com https://i.pinimg.com https://png.pngtree.com https://via.placeholder.com https://i.imgur.com https://cdn-icons-png.flaticon.com;
-    connect-src 'self' https://raw.githubusercontent.com data: blob:;
-    font-src 'self' https://fonts.gstatic.com;">
-  
-  <!-- Chargement des polices -->
+  <title>KnackiMafia</title>
+  <!-- Police d'inspiration horror -->
   <link href="https://fonts.googleapis.com/css2?family=Nosifer&display=swap" rel="stylesheet">
+  <!-- Police pour les boutons (facultatif) -->
   <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
-  
   <style>
     /* Styles de base */
     html, body {
@@ -60,6 +51,7 @@
       height: 2px;
     }
     /* HUD & affichages */
+    /* Conteneur regroupant Health, Kills et Knacki */
     #hudTop {
       position: absolute;
       top: 10px;
@@ -67,7 +59,7 @@
       z-index: 100;
       display: flex;
       align-items: center;
-      gap: 40px;
+      gap: 40px; /* Espace entre les éléments */
     }
     #healthDisplay, #killDisplay, #knackiDisplay, #ammoDisplay {
       font-size: 20px;
@@ -75,6 +67,7 @@
       align-items: center;
       text-shadow: 0 0 5px black;
     }
+    /* S'assurer que le texte des spans ne se duplique pas */
     #healthDisplay span, 
     #killDisplay span, 
     #knackiDisplay span, 
@@ -127,7 +120,7 @@
       border-radius: 50%;
       z-index: 100;
     }
-    /* Canvas HUD pour le timer */
+    /* Canvas HUD pour le timer placé en bas à droite */
     #hud {
       position: absolute;
       bottom: 10px;
@@ -166,6 +159,7 @@
       line-height: 1.4;
       text-shadow: 0 0 5px black;
     }
+    /* Boutons améliorés */
     .menu-overlay button {
       font-size: 24px;
       margin: 10px;
@@ -189,6 +183,7 @@
       transform: translateY(0);
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
     }
+    /* Styles pour le sélecteur de difficulté */
     #difficultyContainer {
       margin-bottom: 20px;
       text-align: center;
@@ -201,22 +196,30 @@
     #difficultySlider {
       width: 300px;
     }
+    /* Fixer la taille des images de mort */
+    #deathMenu img {
+      width: 300px;
+      height: auto;
+      margin-bottom: 20px;
+    }
   </style>
   <script>
-    // Détection d'appareil mobile
+    // Détection d'un appareil mobile.
     if (/Mobi|Android/i.test(navigator.userAgent)) {
       document.addEventListener("DOMContentLoaded", function() {
+        // Remplacement du contenu de la page par une interface dédiée pour mobile, avec texte centré.
         document.body.innerHTML = `
           <div id="mobileNotice" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:20px;box-sizing:border-box;text-align:center;">
             <h1 style="font-family: 'Nosifer', cursive; font-size:48px; margin-bottom:20px;">Jeu non compatible mobile</h1>
             <p style="font-size:20px; margin-bottom:30px; max-width:600px;">
-              Ce jeu est conçu pour être joué sur ordinateur. Pour profiter pleinement de l'expérience, veuillez revenir sur un ordinateur.
+              Casse toi de la gros bouffon !! Cette page est faite pour ordinateur ! Reviens sur pc et fait pas chier !
             </p>
             <button id="backToHome" style="font-size:24px; padding:12px 24px; background:#1a1a1a; color:#ff0000; border:2px solid #ff0000; border-radius:8px; cursor:pointer; font-family: 'Creepster', cursive;">Revenir à l'accueil</button>
           </div>
         `;
         document.getElementById("backToHome").addEventListener("click", function() {
-          window.location.href = "index.html";
+          // Redirige vers un autre site.
+          window.location.href = "https://hongus.neocities.org/";
         });
       });
     }
@@ -225,7 +228,7 @@
 <body>
   <!-- Affichage du jeu -->
   <div id="crosshair"></div>
-  <!-- Conteneur HUD -->
+  <!-- Conteneur HUD pour Health, Kills et Knacki -->
   <div id="hudTop">
     <div id="healthDisplay">
       <img class="icon" src="https://cdn.freebiesupply.com/logos/large/2x/heart-logo-png-transparent.png" alt="Health"/>
@@ -245,18 +248,21 @@
     <span>Ammo: 10</span>
   </div>
   <div id="reloadMessage">R pour recharger</div>
-  <!-- Invite ramassage -->
+  <!-- Invite de ramassage -->
   <div id="pickupPrompt">E pour ramasser</div>
   <canvas id="minimap" width="200" height="200"></canvas>
+  <!-- Canvas HUD pour le timer placé en bas à droite -->
   <canvas id="hud" width="250" height="60"></canvas>
 
   <!-- Menus -->
   <div id="startMenu" class="menu-overlay">
-    <h1>Labyrinthe 3D</h1>
+    <!-- Image ajoutée dans le menu principal -->
+    <img src="https://imgur.com/a/i84So79" alt="Image du menu" style="width:200px; margin-bottom:20px;">
+    <h1>KnackiMafia</h1>
     <p>
-      Réglez la difficulté à l'aide du curseur, puis appuyez sur "Démarrer".<br>
-      Utilisez WASD pour vous déplacer, la souris pour regarder et cliquez pour tirer.<br>
-      Évitez les ennemis et collectez 6 knacki pour gagner.
+      Choisis UNE DIFICULETE ET lance LE JEU !!<br>
+      Utilisez ZQSD pour vous déplacer, la souris pour regarder et cliquez pour tirer !! (débile)<br>
+      collectez 6 KNACKIS ! pour gagner.
     </p>
     <div id="difficultyContainer">
       <div id="difficultyLabel">Difficulté : Moyen</div>
@@ -266,57 +272,71 @@
     <button id="accueilButtonStart">Accueil</button>
   </div>
   <div id="deathMenu" class="menu-overlay" style="display: none;">
-    <img src="https://via.placeholder.com/150?text=Vous+%C3%AAtes+mort" alt="Vous êtes mort" style="margin-bottom:20px;">
-    <h1>Vous êtes mort</h1>
+    <img src="https://i.pinimg.com/736x/a8/e9/6a/a8e96a9887710065d97495e078630081.jpg" alt="Vous êtes mort">
+    <h1>T'es mort !!! INCAPABLE !!</h1>
     <h2 id="deathStats"></h2>
-    <button id="restartButtonDeath">Recommencer</button>
-    <button id="accueilButtonDeath">Accueil</button>
+    <!-- Les boutons seront recréés dynamiquement dans gameOver() -->
   </div>
   <div id="victoryMenu" class="menu-overlay" style="display: none;">
-    <h1>Vous avez collecté toutes les knacki !</h1>
+    <h1>BRAVO VOUS ALLEZ POUVOIR BIEN MLANEGR AVEC CES KNACKIS</h1>
     <p id="scoreText">Score : </p>
     <button id="restartButtonVictory">Recommencer</button>
     <button id="accueilButtonVictory">Accueil</button>
   </div>
 
-  <!-- Chargement de THREE.js -->
+  <!-- Trois.js et scripts du jeu -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
     "use strict";
     // -------------------------------------
-    // Paramètres de difficulté
-    let difficultyValue = 50;
-    function lerp(a, b, t) { return a + (b - a) * t; }
+    // DÉFINITION DES PARAMÈTRES DE DIFFICULTÉ
+    // -------------------------------------
+    // Le slider va de 0 (très facile) à 100 (très difficile)
+    let difficultyValue = 50; // valeur par défaut
+    // Fonction de linéarisation
+    function lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
+    // Calcule les paramètres en fonction de la valeur du slider
     function getDifficultyParams(val) {
-      let t = val / 100;
+      let t = val / 100; // t entre 0 et 1
       return {
-        enemySpawnFactor: lerp(0.5, 2.0, t),
-        enemySpeed: lerp(0.8, 2.0, t),
-        bossSpeed: lerp(0.8, 2.0, t),
-        playerHealth: Math.round(lerp(200, 50, t))
+        enemySpawnFactor: lerp(0.5, 2.0, t),  // Moins d'ennemis en facile, plus en difficile
+        enemySpeed: lerp(0.8, 2.0, t),          // Vitesse des ennemis
+        bossSpeed: lerp(0.8, 2.0, t),           // Vitesse du boss
+        playerHealth: Math.round(lerp(200, 50, t))// Plus de vie en facile, moins en difficile
       };
     }
+    // On calculera ces paramètres lors du démarrage du jeu
     let difficultyParams = getDifficultyParams(difficultyValue);
 
     // -------------------------------------
-    // Utilitaires de chargement
+    // UTILITAIRES DE CHARGEMENT
+    // -------------------------------------
     const loadTexture = url => new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = "anonymous";
-      img.onload = () => { const tex = new THREE.Texture(img); tex.needsUpdate = true; resolve(tex); };
+      img.onload = () => {
+        const tex = new THREE.Texture(img);
+        tex.needsUpdate = true;
+        resolve(tex);
+      };
       img.onerror = () => reject(new Error("Erreur de chargement " + url));
       img.src = url;
     });
     const loadTextures = urls => Promise.all(urls.map(loadTexture));
 
     // -------------------------------------
-    // Paramètres du labyrinthe
+    // PARAMÈTRES DU LABYRINTHE
+    // -------------------------------------
     const mazeCols = 50, mazeRows = 50, cellSize = 2, wallProb = 0.3, safeThresh = 3;
     const maze = [];
     for (let i = 0; i < mazeRows; i++) {
       maze[i] = [];
       for (let j = 0; j < mazeCols; j++) {
-        maze[i][j] = (i === 0 || i === mazeRows - 1 || j === 0 || j === mazeCols - 1) ? 1 : (Math.random() < wallProb ? 1 : 0);
+        maze[i][j] = (i === 0 || i === mazeRows - 1 || j === 0 || j === mazeCols - 1)
+          ? 1
+          : (Math.random() < wallProb ? 1 : 0);
       }
     }
     const countAdj = (i, j) => {
@@ -333,13 +353,18 @@
     const safeCells = [];
     for (let i = 1; i < mazeRows - 1; i++) {
       for (let j = 1; j < mazeCols - 1; j++) {
-        if (maze[i][j] === 0 && countAdj(i, j) <= safeThresh) { safeCells.push({ i, j }); }
+        if (maze[i][j] === 0 && countAdj(i, j) <= safeThresh) {
+          safeCells.push({ i, j });
+        }
       }
     }
-    const spawnCell = safeCells.length ? safeCells[Math.floor(Math.random() * safeCells.length)] : { i: Math.floor(mazeRows / 2), j: Math.floor(mazeCols / 2) };
+    const spawnCell = safeCells.length
+      ? safeCells[Math.floor(Math.random() * safeCells.length)]
+      : { i: Math.floor(mazeRows / 2), j: Math.floor(mazeCols / 2) };
 
     // -------------------------------------
-    // Scène, caméra, renderer
+    // SCÈNE, CAMÉRA, RENDERER
+    // -------------------------------------
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
     const cubeTextureLoader = new THREE.CubeTextureLoader();
@@ -352,6 +377,7 @@
       'https://i.imgur.com/8UDDzVg.jpeg'
     ];
     scene.background = cubeTextureLoader.load(skyboxImages);
+
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const offsetX = mazeCols / 2 - 0.5, offsetZ = mazeRows / 2 - 0.5, playerHeight = 1.5;
     camera.position.set((spawnCell.j - offsetX) * cellSize, playerHeight, (spawnCell.i - offsetZ) * cellSize);
@@ -362,7 +388,8 @@
     document.body.appendChild(renderer.domElement);
 
     // -------------------------------------
-    // Audio et listener
+    // AUDIO & LISTENER
+    // -------------------------------------
     const listener = new THREE.AudioListener();
     camera.add(listener);
     document.body.addEventListener("click", () => {
@@ -374,33 +401,34 @@
     const shootSound = new THREE.Audio(listener),
           hitSound = new THREE.Audio(listener),
           reloadSound = new THREE.Audio(listener);
-    // Chargement des sons (URLs raw)
-    new THREE.AudioLoader().load('https://raw.githubusercontent.com/Grtae/htmlaudio/main/GUNPis_Coup%20de%20feu%20de%20357%20magnum%209%20mm%20(ID%200438)_LS.mp3', buffer => { 
+    new THREE.AudioLoader().load('https://files.catbox.moe/zej06i.mp3', buffer => { 
       shootSound.setBuffer(buffer); shootSound.setVolume(0.5); 
     });
-    new THREE.AudioLoader().load('https://raw.githubusercontent.com/Grtae/htmlaudio/main/hit-flesh-03-266308.mp3', buffer => { 
+    new THREE.AudioLoader().load('https://files.catbox.moe/n5qwhu.mp3', buffer => { 
       hitSound.setBuffer(buffer); hitSound.setVolume(0.5); 
     });
-    new THREE.AudioLoader().load('https://raw.githubusercontent.com/Grtae/htmlaudio/main/calm-slow-reloading.mp3', buffer => { 
+    new THREE.AudioLoader().load('https://files.catbox.moe/2ta8rv.mp3', buffer => { 
       reloadSound.setBuffer(buffer); reloadSound.setVolume(0.5); 
     });
+    // Sons du boss
     const bossLoopSound = new THREE.PositionalAudio(listener);
     bossLoopSound.setDistanceModel('linear');
     bossLoopSound.setRefDistance(4);
     bossLoopSound.setMaxDistance(20);
     bossLoopSound.setRolloffFactor(1);
-    new THREE.AudioLoader().load('https://raw.githubusercontent.com/Grtae/htmlaudio/main/SCARING%20THE%20HOES.mp3', buffer => {
+    new THREE.AudioLoader().load('https://files.catbox.moe/2xkzik.mp3', buffer => {
       bossLoopSound.setBuffer(buffer);
       bossLoopSound.setLoop(true);
     });
     const bossHitSound = new THREE.Audio(listener);
-    new THREE.AudioLoader().load('https://raw.githubusercontent.com/Grtae/htmlaudio/main/VOXScrm_Hurlement%201%20garcon%20(ID%201664)_LS.wav', buffer => {
+    new THREE.AudioLoader().load('https://files.catbox.moe/hpoycs.wav', buffer => {
       bossHitSound.setBuffer(buffer);
       bossHitSound.setVolume(1.0);
     });
 
     // -------------------------------------
-    // Lumière
+    // LUMIÈRE
+    // -------------------------------------
     const flashlight = new THREE.SpotLight(0xffffff, 3, 40, Math.PI / 8, 0.5);
     flashlight.castShadow = true;
     flashlight.position.copy(camera.position);
@@ -408,7 +436,8 @@
     scene.add(flashlight.target);
 
     // -------------------------------------
-    // Sol
+    // SOL
+    // -------------------------------------
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(mazeCols * cellSize * 2, mazeRows * cellSize * 2),
       new THREE.MeshStandardMaterial({ color: 0x222222 })
@@ -416,7 +445,7 @@
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     scene.add(ground);
-    loadTexture("https://i.imgur.com/ZWHSjeB.jpeg").then(tex => {
+    loadTexture("https://i.imgur.com/UGB2Ct2.jpeg").then(tex => {
       tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
       tex.repeat.set(mazeCols, mazeRows);
       ground.material.map = tex;
@@ -424,15 +453,35 @@
     });
 
     // -------------------------------------
-    // Textures de décor
-    const wallTextureURL = "https://i.imgur.com/2kwexnI.jpeg";
+    // CHARGEMENT DES TEXTURES DE DÉCOR
+    // -------------------------------------
+    const wallTextureURL = "https://i.imgur.com/JIbGEsB.jpeg";
     const treeTextureURLs = [
       "https://i.imgur.com/B6qerGA.png", 
       "https://i.imgur.com/B6qerGA.png"
     ];
     const interiorBlockTextureURLs = [
-      "https://i.imgur.com/5KXrN6V.png",
-      "https://i.imgur.com/dJjLh9E.png"
+      "https://i.imgur.com/S6jWw8a.jpeg",
+      "https://i.imgur.com/Y178cQ1.jpeg",
+      "https://i.imgur.com/C8QrNid.jpeg",
+      "https://i.imgur.com/TPZP442.jpeg",
+      "https://i.imgur.com/RGR9tqE.jpeg",
+      "https://i.imgur.com/txDE3fC.jpeg",
+      "https://i.imgur.com/xgvoLhc.jpeg",
+      "https://i.imgur.com/zaJ6hGv.jpeg",
+      "https://i.imgur.com/5HFpdzU.jpeg",
+      "https://i.imgur.com/kXNEKer.jpeg",
+      "https://i.imgur.com/QG1CisR.jpeg",
+      "https://i.imgur.com/x0ueBmA.jpeg",
+      "https://i.imgur.com/GpTePcU.jpeg",
+      "https://i.imgur.com/iGkHIBS.jpeg",
+      "https://i.imgur.com/PMEe3vf.jpeg",
+      "https://i.imgur.com/sqFr1aA.jpeg",
+      "https://i.imgur.com/QzRFeIB.jpeg",
+      "https://i.imgur.com/ELBKbju.jpeg",
+      "https://i.imgur.com/qR92O8T.jpeg",
+      "https://i.imgur.com/U1fQyss.jpeg",
+      "https://i.imgur.com/jCWrLuc.jpeg"
     ];
     Promise.all([
       loadTexture(wallTextureURL),
@@ -462,7 +511,8 @@
       for (let i = 0; i < mazeRows; i++) {
         for (let j = 0; j < mazeCols; j++) {
           if (maze[i][j] === 1) {
-            const x = (j - offsetX) * cellSize, z = (i - offsetZ) * cellSize;
+            const x = (j - offsetX) * cellSize,
+                  z = (i - offsetZ) * cellSize;
             if (i === 0 || i === mazeRows - 1 || j === 0 || j === mazeCols - 1) {
               const m = new THREE.Mesh(wallGeo, wallMat);
               m.position.set(x, 1, z);
@@ -470,7 +520,9 @@
               scene.add(m);
               walls.push(m);
             } else {
-              const centerRow = mazeRows / 2, centerCol = mazeCols / 2, distance = Math.hypot(i - centerRow, j - centerCol);
+              const centerRow = mazeRows / 2,
+                    centerCol = mazeCols / 2,
+                    distance = Math.hypot(i - centerRow, j - centerCol);
               let treeProbability = (distance < 10) ? 0.9 : 0.8;
               if (Math.random() < treeProbability) {
                 const randomTreeMat = treeMats[Math.floor(Math.random() * treeMats.length)];
@@ -493,7 +545,8 @@
     }).catch(err => console.error(err));
 
     // -------------------------------------
-    // Fonctions de création d'arbres
+    // FONCTIONS DE CRÉATION D'ARBRES AVEC VARIANTES
+    // -------------------------------------
     function createRandomTree(x, z, cellSize, treeMat) {
       const variant = Math.floor(Math.random() * 3);
       switch (variant) {
@@ -554,7 +607,18 @@
     }
 
     // -------------------------------------
-    // Utilitaires supplémentaires
+    // CHARGEMENT DE LA TEXTURE POUR LE "KNACKI"
+    // -------------------------------------
+    // Nous chargeons une texture pour le sprite qui remplacera l'objet knacki
+    let knackiTexture = null;
+    const knackiTextureURL = "https://i.imgur.com/GmJDKHQ.jpeg";
+    new THREE.TextureLoader().load(knackiTextureURL, texture => {
+      knackiTexture = texture;
+    });
+
+    // -------------------------------------
+    // UTILITAIRES SUPPLÉMENTAIRES
+    // -------------------------------------
     function getRandomSafeCell(excludeCell) {
       const cells = safeCells.filter(c => !(c.i === excludeCell.i && c.j === excludeCell.j));
       return cells.length ? cells[Math.floor(Math.random() * cells.length)] : { i: Math.floor(mazeRows / 2), j: Math.floor(mazeCols / 2) };
@@ -565,8 +629,16 @@
     }
 
     // -------------------------------------
-    // Ennemis
-    const enemyURLs = ["https://i.imgur.com/AQDHAvz.png"];
+    // ENNEMIS
+    // -------------------------------------
+    // Ajout de plusieurs URL pour les textures ennemies
+    const enemyURLs = [
+      "https://i.imgur.com/dV8GRk2.png",
+      "https://i.imgur.com/QIwjfsp.jpeg",
+      "https://i.imgur.com/lGPOHgu.jpeg",
+      "https://i.imgur.com/n9i2uRP.jpeg",
+      "https://i.imgur.com/aCX3k2Q.png"
+    ];
     let enemyTextures = [], enemies = [];
     loadTextures(enemyURLs).then(textures => {
       enemyTextures = textures;
@@ -579,10 +651,13 @@
     });
     class Enemy {
       constructor(pos) {
-        const mat = new THREE.SpriteMaterial({ map: enemyTextures[0], transparent: true, alphaTest: 0.5 });
+        // Choisir aléatoirement une texture parmi enemyTextures
+        const randomIndex = Math.floor(Math.random() * enemyTextures.length);
+        const mat = new THREE.SpriteMaterial({ map: enemyTextures[randomIndex], transparent: true, alphaTest: 0.5 });
         this.sprite = new THREE.Sprite(mat);
         this.sprite.scale.set(1.5, 1.5, 1.5);
         this.sprite.position.set(pos.x, 1.2, pos.z);
+        // Vitesse ajustée selon la difficulté
         this.speed = 2 * difficultyParams.enemySpeed;
       }
       update(delta, playerPos) {
@@ -595,7 +670,8 @@
     }
 
     // -------------------------------------
-    // Boss
+    // BOSS (MODE "WANDERING" ET "AGGRESSIVE")
+    // -------------------------------------
     let bossTexture = null, bossEnemy = null;
     loadTextures(["https://i.imgur.com/ZWHSjeB.jpeg"]).then(textures => {
       bossTexture = textures[0];
@@ -617,15 +693,28 @@
       }
       update(delta, playerPos, elapsedTime) {
         const aggressionFactor = Math.max(0.5, 1 - (elapsedTime / 300));
-        if (this.slowTimer > 0) { this.slowTimer -= delta; if (this.slowTimer < 0) this.slowTimer = 0; }
+        if (this.slowTimer > 0) {
+          this.slowTimer -= delta;
+          if (this.slowTimer < 0) this.slowTimer = 0;
+        }
         const slowFactor = this.slowTimer > 0 ? 0.3 : 1.0;
         this.modeTimer -= delta;
         if (this.modeTimer <= 0) {
-          if (this.mode === "wandering") { this.mode = "aggressive"; this.modeTimer = 6; this.wanderTarget = null; }
-          else { this.mode = "wandering"; this.modeTimer = 5; }
+          if (this.mode === "wandering") {
+            this.mode = "aggressive";
+            this.modeTimer = 6;
+            this.wanderTarget = null;
+          } else {
+            this.mode = "wandering";
+            this.modeTimer = 5;
+          }
         }
         const distanceToPlayer = this.sprite.position.distanceTo(playerPos);
-        if (this.mode === "wandering" && distanceToPlayer < 4) { this.mode = "aggressive"; this.modeTimer = 6; this.wanderTarget = null; }
+        if (this.mode === "wandering" && distanceToPlayer < 4) {
+          this.mode = "aggressive";
+          this.modeTimer = 6;
+          this.wanderTarget = null;
+        }
         if (this.mode === "aggressive") {
           const dir = new THREE.Vector3().subVectors(playerPos, this.sprite.position);
           const distance = dir.length();
@@ -662,30 +751,42 @@
     }
 
     // -------------------------------------
-    // Collecte de knacki
+    // COLLECTE DE KNACKI (remplacé par un sprite)
+    // -------------------------------------
     let knackiCount = 0;
     const maxKnacki = 6;
     const knackiCollectibles = [];
     function updateKnackiDisplay() {
-      const span = document.getElementById("knackiDisplay").querySelector("span");
-      span.innerText = `Knacki: ${knackiCount}/${maxKnacki}`;
+      const knackiDisplaySpan = document.getElementById("knackiDisplay").querySelector("span");
+      knackiDisplaySpan.innerText = `Knacki: ${knackiCount}/${maxKnacki}`;
     }
     updateKnackiDisplay();
     function spawnKnacki() {
       const cell = safeCells[Math.floor(Math.random() * safeCells.length)];
-      const x = (cell.j - offsetX) * cellSize, z = (cell.i - offsetZ) * cellSize;
-      const geo = new THREE.CylinderGeometry(0.2, 0.2, 0.8, 16);
-      const mat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-      const mesh = new THREE.Mesh(geo, mat);
-      mesh.position.set(x, 0.4, z);
-      mesh.castShadow = true;
-      scene.add(mesh);
-      knackiCollectibles.push(mesh);
+      const x = (cell.j - offsetX) * cellSize;
+      const z = (cell.i - offsetZ) * cellSize;
+      // Si la texture de knacki est déjà chargée, créez un sprite
+      if (knackiTexture) {
+        const knackiMat = new THREE.SpriteMaterial({ map: knackiTexture, transparent: true, alphaTest: 0.5 });
+        const knackiSprite = new THREE.Sprite(knackiMat);
+        // Ajustez l'échelle pour obtenir la taille souhaitée (ici 1.5 peut être modifié)
+        knackiSprite.scale.set(1.5, 1.5, 1.5);
+        // Positionné légèrement au-dessus du sol
+        knackiSprite.position.set(x, 1, z);
+        knackiSprite.castShadow = true;
+        scene.add(knackiSprite);
+        knackiCollectibles.push(knackiSprite);
+      }
     }
-    setInterval(() => { if (gameState === "playing" && knackiCount < maxKnacki) { spawnKnacki(); } }, 25000);
+    setInterval(() => {
+      if (gameState === "playing" && knackiCount < maxKnacki) {
+        spawnKnacki();
+      }
+    }, 25000);
 
     // -------------------------------------
-    // Variables du joueur, déplacement, balles, etc.
+    // VARIABLES DU JOUEUR, DÉPLACEMENT, BALLES, ETC.
+    // -------------------------------------
     const baseSpeed = 3, sprintMult = 2;
     const keys = {};
     let yaw = 0, pitch = 0, health = difficultyParams.playerHealth, currentAmmo = 10, isReloading = false, killCount = 0;
@@ -694,8 +795,13 @@
     const healthDisplaySpan = document.getElementById("healthDisplay").querySelector("span");
     const killDisplaySpan = document.getElementById("killDisplay").querySelector("span");
 
-    document.addEventListener("keydown", e => { keys[e.code] = true; if (e.code === "KeyR") { reloadAmmo(); } });
-    document.addEventListener("keyup", e => { keys[e.code] = false; });
+    document.addEventListener("keydown", e => {
+      keys[e.code] = true;
+      if (e.code === "KeyR") {
+        reloadAmmo();
+      }
+    });
+    document.addEventListener("keyup", e => keys[e.code] = false);
     document.addEventListener("mousemove", e => {
       if (document.pointerLockElement === document.body && gameState === "playing") {
         yaw -= e.movementX * 0.002;
@@ -703,6 +809,7 @@
         pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
       }
     });
+
     const playerMesh = new THREE.Mesh(
       new THREE.SphereGeometry(0.2, 16, 16),
       new THREE.MeshBasicMaterial({ color: 0x00ff00 })
@@ -710,19 +817,30 @@
     playerMesh.position.copy(camera.position);
     playerMesh.castShadow = true;
     scene.add(playerMesh);
-    const updateAmmo = () => { ammoDisplaySpan.innerText = `Ammo: ${currentAmmo}`; reloadMessageEl.style.display = currentAmmo === 0 ? "block" : "none"; };
+
+    const updateAmmo = () => {
+      ammoDisplaySpan.innerText = `Ammo: ${currentAmmo}`;
+      reloadMessageEl.style.display = currentAmmo === 0 ? "block" : "none";
+    };
     const updateHealth = () => { healthDisplaySpan.innerText = `Health: ${health}`; };
     const updateKills = () => { killDisplaySpan.innerText = `Kills: ${killCount}`; };
+
     function reloadAmmo() {
       if (!isReloading && currentAmmo < 10) {
         isReloading = true;
         reloadSound.play();
-        setTimeout(() => { currentAmmo = 10; updateAmmo(); isReloading = false; }, 1000);
+        setTimeout(() => {
+          currentAmmo = 10;
+          updateAmmo();
+          isReloading = false;
+        }, 1000);
       }
     }
+
     const bullets = [];
     function shoot() {
-      if (gameState !== "playing" || isReloading || currentAmmo <= 0) return;
+      if (gameState !== "playing") return;
+      if (isReloading || currentAmmo <= 0) return;
       currentAmmo--;
       updateAmmo();
       const bullet = new THREE.Mesh(
@@ -739,16 +857,22 @@
       shootSound.play();
     }
     document.addEventListener("click", shoot);
+
     const tempBox = new THREE.Box3();
-    function sphereVsWall(sphere, wall) { tempBox.setFromObject(wall); return tempBox.intersectsSphere(sphere); }
-    
+    function sphereVsWall(sphere, wall) {
+      tempBox.setFromObject(wall);
+      return tempBox.intersectsSphere(sphere);
+    }
+
     // -------------------------------------
-    // Mini-carte
+    // MINI‑CARTE
+    // -------------------------------------
     const miniCanvas = document.getElementById("minimap");
     const miniCtx = miniCanvas.getContext("2d");
     const miniScale = miniCanvas.width / (mazeCols * cellSize);
     function drawMinimap() {
-      const w = miniCtx.canvas.width, h = miniCtx.canvas.height, cx = w / 2, cy = h / 2;
+      const w = miniCtx.canvas.width, h = miniCtx.canvas.height;
+      const cx = w / 2, cy = h / 2;
       miniCtx.clearRect(0, 0, w, h);
       miniCtx.save();
       miniCtx.beginPath();
@@ -758,11 +882,15 @@
       camera.getWorldDirection(forward);
       miniCtx.translate(cx, cy);
       miniCtx.rotate(-Math.atan2(forward.x, -forward.z));
+
       miniCtx.fillStyle = "#333";
-      if (window.walls) { window.walls.forEach(wall => {
-          const x = wall.position.x - camera.position.x, z = wall.position.z - camera.position.z;
+      if (window.walls) {
+        window.walls.forEach(wall => {
+          const x = wall.position.x - camera.position.x;
+          const z = wall.position.z - camera.position.z;
           miniCtx.fillRect(x * miniScale, z * miniScale, cellSize * miniScale, cellSize * miniScale);
-      }); }
+        });
+      }
       enemies.forEach(e => {
         miniCtx.fillStyle = "#ff0000";
         miniCtx.beginPath();
@@ -798,17 +926,20 @@
       miniCtx.lineWidth = 2;
       miniCtx.stroke();
     }
-    
+
     // -------------------------------------
-    // Gestion des menus et état du jeu
-    let gameState = "start";
+    // GESTION DES MENUS ET DE L'ÉTAT DU JEU
+    // -------------------------------------
+    let gameState = "start"; // "start", "playing", "dead", "victory"
     let startTime = 0;
     function showStartMenu() {
       gameState = "start";
       document.getElementById("startMenu").style.display = "flex";
       document.getElementById("deathMenu").style.display = "none";
       document.getElementById("victoryMenu").style.display = "none";
-      if (document.pointerLockElement) { document.exitPointerLock(); }
+      if (document.pointerLockElement) {
+        document.exitPointerLock();
+      }
     }
     function hideMenus() {
       document.getElementById("startMenu").style.display = "none";
@@ -819,6 +950,7 @@
       hideMenus();
       gameState = "playing";
       startTime = performance.now();
+      // On recalcule les paramètres de difficulté une fois pour toutes
       difficultyParams = getDifficultyParams(difficultyValue);
       health = difficultyParams.playerHealth;
       updateHealth();
@@ -827,13 +959,21 @@
     function gameOver(cause = "normal") {
       if (gameState !== "playing") return;
       gameState = "dead";
-      if (document.pointerLockElement) { document.exitPointerLock(); }
+      if (document.pointerLockElement) {
+        document.exitPointerLock();
+      }
       const deathMenu = document.getElementById("deathMenu");
       const elapsedTimeStr = ((performance.now() - startTime) / 1000).toFixed(1);
-      let title = (cause === "boss") ? "Le Boss vous a anéanti !" : "Vous êtes mort";
-      let imgSrc = (cause === "boss") ? "https://via.placeholder.com/150?text=Boss+a+vaincu" : "https://via.placeholder.com/150?text=Vous+%C3%AAtes+mort";
+      let title = "", imgSrc = "";
+      if (cause === "boss") {
+        title = "JPEGMAFIA VOUS A ENGLOUTI !! !";
+        imgSrc = "https://i.pinimg.com/736x/2c/52/03/2c52032a6070ece8fada09aeaf6206e7.jpg";
+      } else {
+        title = "Tu t'es fait tué par andy le pédophile !!";
+        imgSrc = "https://i.imgur.com/OcqNl52.jpeg";
+      }
       deathMenu.innerHTML = `
-        <img src="${imgSrc}" alt="${title}" style="margin-bottom:20px;">
+        <img src="${imgSrc}" alt="${title}">
         <h1>${title}</h1>
         <h2>Kills: ${killCount} - Temps: ${elapsedTimeStr} sec</h2>
         <button id="restartButtonDeath">Recommencer</button>
@@ -841,49 +981,64 @@
       `;
       deathMenu.style.display = "flex";
       document.getElementById("restartButtonDeath").addEventListener("click", () => location.reload());
-      document.getElementById("accueilButtonDeath").addEventListener("click", () => location.reload());
+      // Le bouton "Accueil" du menu de mort redirige maintenant vers l'index
+      document.getElementById("accueilButtonDeath").addEventListener("click", () => window.location.href = "index.html");
     }
     function victory() {
       if (gameState !== "playing") return;
       gameState = "victory";
-      if (document.pointerLockElement) { document.exitPointerLock(); }
+      if (document.pointerLockElement) {
+        document.exitPointerLock();
+      }
       const elapsedTime = ((performance.now() - startTime) / 1000).toFixed(1);
       document.getElementById("scoreText").innerText = `Kills: ${killCount} - Temps: ${elapsedTime} sec`;
       document.getElementById("victoryMenu").style.display = "flex";
     }
     document.getElementById("startButton").addEventListener("click", startGame);
-    document.getElementById("accueilButtonStart").addEventListener("click", () => location.reload());
+    document.getElementById("accueilButtonStart").addEventListener("click", () => window.location.href = "https://hongus.neocities.org/");
     document.getElementById("restartButtonVictory").addEventListener("click", () => location.reload());
-    document.getElementById("accueilButtonVictory").addEventListener("click", () => location.reload());
-    
+    document.getElementById("accueilButtonVictory").addEventListener("click", () => window.location.href = "https://hongus.neocities.org/");
+
     // -------------------------------------
-    // Gestion du slider de difficulté
+    // GESTION DU SLIDER DE DIFFICULTÉ
+    // -------------------------------------
     const difficultySlider = document.getElementById("difficultySlider");
     const difficultyLabel = document.getElementById("difficultyLabel");
     function updateDifficultyLabel(val) {
       difficultyValue = parseInt(val, 10);
-      let labelText = (difficultyValue < 33) ? "Facile" : (difficultyValue > 66) ? "Difficile" : "Moyen";
+      let labelText = "Moyen";
+      if (difficultyValue < 25) {
+        labelText = "Facile";
+      } else if (difficultyValue > 66) {
+        labelText = "Difficile";
+      }
       difficultyLabel.innerText = "Difficulté : " + labelText;
     }
-    difficultySlider.addEventListener("input", e => { updateDifficultyLabel(e.target.value); });
-    updateDifficultyLabel(difficultySlider.value);
-    
+    difficultySlider.addEventListener("input", e => {
+      updateDifficultyLabel(e.target.value);
+    });
+    updateDifficultyLabel(difficultySlider.value); // initialisation
+
     // -------------------------------------
     // HUD (Timer et icône)
+    // -------------------------------------
     const hudCanvas = document.getElementById("hud");
     const hudCtx = hudCanvas.getContext("2d");
     const clockIcon = new Image();
-    clockIcon.src = "https://cdn-icons-png.flaticon.com/512/61/61112.png";
+    clockIcon.src = "https://i.imgur.com/yteToPX.png";
     function drawHUD(elapsedTime) {
       hudCtx.clearRect(0, 0, hudCanvas.width, hudCanvas.height);
-      if (clockIcon.complete) { hudCtx.drawImage(clockIcon, 5, 10, 40, 40); }
+      if (clockIcon.complete) {
+        hudCtx.drawImage(clockIcon, 5, 10, 40, 40);
+      }
       hudCtx.font = "20px Nosifer, cursive";
       hudCtx.fillStyle = "#ff0000";
       hudCtx.fillText("Time: " + elapsedTime.toFixed(1) + " s", 55, 35);
     }
-    
+
     // -------------------------------------
-    // Collecte manuelle des knacki
+    // COLLECTE MANUELLE DES KNACKI
+    // -------------------------------------
     const raycaster = new THREE.Raycaster();
     let currentKnackiTarget = null;
     const pickupPromptEl = document.getElementById("pickupPrompt");
@@ -891,18 +1046,27 @@
       if (e.code === "KeyE" && gameState === "playing" && currentKnackiTarget) {
         scene.remove(currentKnackiTarget);
         const index = knackiCollectibles.indexOf(currentKnackiTarget);
-        if (index > -1) { knackiCollectibles.splice(index, 1); }
+        if (index > -1) {
+          knackiCollectibles.splice(index, 1);
+        }
         knackiCount++;
         updateKnackiDisplay();
         pickupPromptEl.style.display = "none";
         currentKnackiTarget = null;
-        if (knackiCount >= maxKnacki) { victory(); }
+        if (knackiCount >= maxKnacki) {
+          victory();
+        }
       }
     });
-    
+
     // -------------------------------------
-    // Boucle d'animation
+    // SPAWN CONTINU DES ENNEMIS
+    // -------------------------------------
     let lastEnemySpawnTime = 0;
+
+    // -------------------------------------
+    // BOUCLE D'ANIMATION
+    // -------------------------------------
     const clock = new THREE.Clock();
     function animate() {
       requestAnimationFrame(animate);
@@ -916,7 +1080,8 @@
         camera.getWorldDirection(d);
         flashlight.target.position.copy(camera.position).add(d);
         flashlight.target.updateMatrixWorld();
-    
+
+        // SPAWN CONTINU DES ENNEMIS
         let enemySpawnInterval = Math.max((2 - (elapsedTime / 60)) / difficultyParams.enemySpawnFactor, 0.5);
         if (elapsedTime - lastEnemySpawnTime >= enemySpawnInterval) {
           const pos = getEnemySpawn();
@@ -925,21 +1090,24 @@
           enemies.push(enemy);
           lastEnemySpawnTime = elapsedTime;
         }
-    
+
         const move = new THREE.Vector3();
         if (keys["KeyW"]) move.z -= 1;
         if (keys["KeyS"]) move.z += 1;
         if (keys["KeyA"]) move.x -= 1;
         if (keys["KeyD"]) move.x += 1;
-        move.normalize().multiplyScalar(baseSpeed * delta * ((keys["ShiftLeft"] || keys["ShiftRight"]) ? sprintMult : 1));
+        move.normalize().multiplyScalar(baseSpeed * delta * (keys["ShiftLeft"] || keys["ShiftRight"] ? sprintMult : 1));
         move.applyQuaternion(camera.quaternion);
         const newPos = camera.position.clone().add(move);
         newPos.y = playerHeight;
         const sphere = new THREE.Sphere(newPos, 0.2);
-        if (window.walls && window.walls.every(w => !sphereVsWall(sphere, w))) { camera.position.copy(newPos); }
+        if (window.walls && window.walls.every(w => !sphereVsWall(sphere, w))) {
+          camera.position.copy(newPos);
+        }
         camera.position.y = playerHeight;
         playerMesh.position.copy(camera.position);
-    
+
+        // Mise à jour des balles
         for (let i = bullets.length - 1; i >= 0; i--) {
           const bullet = bullets[i];
           bullet.position.add(bullet.userData.velocity);
@@ -967,7 +1135,8 @@
             bullets.splice(i, 1);
           }
         }
-    
+
+        // Mise à jour des ennemis
         for (let i = enemies.length - 1; i >= 0; i--) {
           enemies[i].update(delta, camera.position);
           if (enemies[i].sprite.position.distanceTo(camera.position) < 0.5) {
@@ -977,10 +1146,13 @@
             enemies.splice(i, 1);
             health -= 25;
             updateHealth();
-            if (health <= 0 && gameState === "playing") { gameOver("normal"); }
+            if (health <= 0 && gameState === "playing") {
+              gameOver("normal");
+            }
           }
         }
-    
+
+        // Mise à jour du boss
         if (bossEnemy) {
           bossEnemy.update(delta, camera.position, elapsedTime);
           const dist = bossEnemy.sprite.position.distanceTo(camera.position);
@@ -989,19 +1161,32 @@
             bossEnemy.lastHitTime = performance.now();
             if (bossLoopSound.isPlaying) bossLoopSound.stop();
             bossHitSound.play();
-            setTimeout(() => { health = 0; updateHealth(); gameOver("boss"); }, 500);
+            setTimeout(() => {
+              health = 0;
+              updateHealth();
+              gameOver("boss");
+            }, 500);
           }
-          if (bossLoopSound.buffer && !bossLoopSound.isPlaying && dist >= 0.8) { bossLoopSound.play().catch(err => console.error(err)); }
+          if (bossLoopSound.buffer && !bossLoopSound.isPlaying && dist >= 0.8) {
+            bossLoopSound.play().catch(err => console.error(err));
+          }
         }
-    
+
+        // Gestion du ramassage des knacki
         if (knackiCollectibles.length > 0) {
           raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
           const intersects = raycaster.intersectObjects(knackiCollectibles);
           if (intersects.length > 0 && intersects[0].distance < 3) {
             currentKnackiTarget = intersects[0].object;
             pickupPromptEl.style.display = "block";
-          } else { currentKnackiTarget = null; pickupPromptEl.style.display = "none"; }
-        } else { currentKnackiTarget = null; pickupPromptEl.style.display = "none"; }
+          } else {
+            currentKnackiTarget = null;
+            pickupPromptEl.style.display = "none";
+          }
+        } else {
+          currentKnackiTarget = null;
+          pickupPromptEl.style.display = "none";
+        }
         drawHUD(elapsedTime);
       }
       drawMinimap();
