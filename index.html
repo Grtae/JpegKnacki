@@ -144,6 +144,8 @@
       z-index: 300;
       text-align: center;
       backdrop-filter: blur(3px);
+      padding: 20px;
+      box-sizing: border-box;
     }
     .menu-overlay h1 {
       font-size: 56px;
@@ -199,6 +201,51 @@
       width: 300px;
       height: auto;
       margin-bottom: 20px;
+    }
+
+    /* Media queries pour les petits écrans */
+    @media (max-width: 768px) {
+      .menu-overlay h1 {
+        font-size: 36px;
+      }
+      .menu-overlay p {
+        font-size: 18px;
+        max-width: 90%;
+      }
+      .menu-overlay button {
+        font-size: 18px;
+        padding: 10px 20px;
+      }
+      #difficultySlider {
+        width: 90%;
+      }
+      #deathMenu img {
+        width: 80%;
+      }
+    }
+    @media (max-width: 480px) {
+      .menu-overlay h1 {
+        font-size: 28px;
+      }
+      .menu-overlay p {
+        font-size: 16px;
+      }
+      .menu-overlay button {
+        font-size: 16px;
+        padding: 8px 16px;
+      }
+      #difficultyLabel {
+        font-size: 20px;
+      }
+      #difficultySlider {
+        width: 100%;
+      }
+      #pickupPrompt {
+        font-size: 20px;
+      }
+      #reloadMessage {
+        font-size: 20px;
+      }
     }
   </style>
   <script>
