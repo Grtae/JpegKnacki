@@ -203,48 +203,28 @@
       margin-bottom: 20px;
     }
 
-    /* Media queries pour les petits écrans */
-    @media (max-width: 768px) {
+    /* Media queries pour petits écrans */
+    @media (max-width: 600px) {
       .menu-overlay h1 {
         font-size: 36px;
       }
       .menu-overlay p {
         font-size: 18px;
         max-width: 90%;
+        padding: 0 10px;
       }
       .menu-overlay button {
         font-size: 18px;
+        margin: 5px;
         padding: 10px 20px;
       }
-      #difficultySlider {
-        width: 90%;
+      .menu-overlay img {
+        width: 150px;
+        max-width: 80%;
+        margin-bottom: 15px;
       }
-      #deathMenu img {
+      #difficultySlider {
         width: 80%;
-      }
-    }
-    @media (max-width: 480px) {
-      .menu-overlay h1 {
-        font-size: 28px;
-      }
-      .menu-overlay p {
-        font-size: 16px;
-      }
-      .menu-overlay button {
-        font-size: 16px;
-        padding: 8px 16px;
-      }
-      #difficultyLabel {
-        font-size: 20px;
-      }
-      #difficultySlider {
-        width: 100%;
-      }
-      #pickupPrompt {
-        font-size: 20px;
-      }
-      #reloadMessage {
-        font-size: 20px;
       }
     }
   </style>
@@ -252,15 +232,14 @@
     // Détection d'un appareil mobile.
     if (/Mobi|Android/i.test(navigator.userAgent)) {
       document.addEventListener("DOMContentLoaded", function() {
-        document.body.innerHTML = `
-          <div id="mobileNotice" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:20px;box-sizing:border-box;text-align:center;">
+        document.body.innerHTML = 
+          `<div id="mobileNotice" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:20px;box-sizing:border-box;text-align:center;">
             <h1 style="font-family: 'Nosifer', cursive; font-size:48px; margin-bottom:20px;">Jeu non compatible mobile</h1>
             <p style="font-size:20px; margin-bottom:30px; max-width:600px;">
               Casse toi de la gros bouffon !! Cette page est faite pour ordinateur ! Reviens sur pc et fait pas chier !
             </p>
             <button id="backToHome" style="font-size:24px; padding:12px 24px; background:#1a1a1a; color:#ff0000; border:2px solid #ff0000; border-radius:8px; cursor:pointer; font-family: 'Creepster', cursive;">Revenir à l'accueil</button>
-          </div>
-        `;
+          </div>`;
         document.getElementById("backToHome").addEventListener("click", function() {
           window.location.href = "https://hongus.neocities.org/";
         });
@@ -999,13 +978,12 @@
         title = "Tu t'es fait tué par andy le pédophile !!";
         imgSrc = "https://i.imgur.com/OcqNl52.jpeg";
       }
-      deathMenu.innerHTML = `
-        <img src="${imgSrc}" alt="${title}">
+      deathMenu.innerHTML = 
+        `<img src="${imgSrc}" alt="${title}">
         <h1>${title}</h1>
         <h2>Kills: ${killCount} - Temps: ${elapsedTimeStr} sec</h2>
         <button id="restartButtonDeath">Recommencer</button>
-        <button id="accueilButtonDeath">Accueil</button>
-      `;
+        <button id="accueilButtonDeath">Accueil</button>`;
       deathMenu.style.display = "flex";
       document.getElementById("restartButtonDeath").addEventListener("click", () => location.reload());
       document.getElementById("accueilButtonDeath").addEventListener("click", () => window.location.href = "index.html");
