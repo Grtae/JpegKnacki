@@ -144,6 +144,7 @@
       z-index: 300;
       text-align: center;
       backdrop-filter: blur(3px);
+      overflow-y: auto;
       padding: 20px;
       box-sizing: border-box;
     }
@@ -202,29 +203,26 @@
       height: auto;
       margin-bottom: 20px;
     }
-
-    /* Media queries pour petits écrans */
-    @media (max-width: 600px) {
+    /* Adaptations pour petits écrans */
+    @media (max-width: 480px) {
       .menu-overlay h1 {
-        font-size: 36px;
+        font-size: 32px;
       }
       .menu-overlay p {
-        font-size: 18px;
-        max-width: 90%;
-        padding: 0 10px;
+        font-size: 16px;
       }
       .menu-overlay button {
         font-size: 18px;
-        margin: 5px;
         padding: 10px 20px;
       }
-      .menu-overlay img {
-        width: 150px;
-        max-width: 80%;
-        margin-bottom: 15px;
+      #difficultyLabel {
+        font-size: 18px;
       }
       #difficultySlider {
         width: 80%;
+      }
+      #deathMenu img {
+        width: 200px;
       }
     }
   </style>
@@ -239,7 +237,8 @@
               Casse toi de la gros bouffon !! Cette page est faite pour ordinateur ! Reviens sur pc et fait pas chier !
             </p>
             <button id="backToHome" style="font-size:24px; padding:12px 24px; background:#1a1a1a; color:#ff0000; border:2px solid #ff0000; border-radius:8px; cursor:pointer; font-family: 'Creepster', cursive;">Revenir à l'accueil</button>
-          </div>`;
+          </div>`
+        ;
         document.getElementById("backToHome").addEventListener("click", function() {
           window.location.href = "https://hongus.neocities.org/";
         });
